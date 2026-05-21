@@ -466,6 +466,11 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 .leaflet-control-zoom a{background:var(--surface)!important;color:var(--text)!important;border-color:var(--border)!important;}
 .leaflet-bar{box-shadow:0 2px 12px rgba(44,24,16,0.15)!important;}
 .leaflet-control-container{z-index:400!important;}
+.leaflet-control-attribution{
+  font-size:9px!important;opacity:0.5;background:rgba(255,255,255,0.6)!important;
+  border-radius:4px 0 0 4px!important;padding:2px 5px!important;
+  backdrop-filter:blur(2px);
+}
 .leaflet-popup-content-wrapper{background:var(--surface)!important;color:var(--text)!important;border:1px solid var(--border)!important;}
 
 /* Scrollbar */
@@ -1150,7 +1155,9 @@ function initMap() {
     center: [state.userLocation.lat, state.userLocation.lng],
     zoom: 13,
     zoomControl: true,
+    attributionControl: false,
   });
+  L.control.attribution({ position: 'topright', prefix: false }).addTo(map);
 
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
     attribution: '© OpenStreetMap contributors © CARTO',
