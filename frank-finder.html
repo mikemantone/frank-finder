@@ -1797,7 +1797,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // result is processed and incorrectly showing the login screen.
   function setupAuthListener() {
     auth.onAuthStateChanged(async (user) => {
-      console.log('[FF] onAuthStateChanged fired. user:', user ? user.email : 'null', '| authDone:', authDone);
       currentUser = user;
       if (user) {
         try { await loadOrCreateProfile(user); } catch(e) { console.warn('Profile load error:', e); }
@@ -1828,17 +1827,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Wait for redirect result before listening to auth state
   auth.getRedirectResult()
-    .then(result => {
-      console.log('[FF] getRedirectResult resolved. user:', result && result.user ? result.user.email : 'null');
-    })
     .catch(err => {
-      console.error('[FF] getRedirectResult error:', err.code, err.message);
       if (err.code && !['auth/popup-closed-by-user','auth/cancelled-popup-request'].includes(err.code)) {
         showToast('Sign-in failed. Please try again.', 'triangle-exclamation');
       }
     })
     .finally(() => {
-      console.log('[FF] setting up auth listener...');
       setupAuthListener();
     });
 });
