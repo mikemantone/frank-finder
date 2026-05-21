@@ -224,6 +224,15 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 .d-section-title i{color:var(--primary);}
 .d-desc{font-size:14px;line-height:1.75;color:var(--subtext);}
 .d-divider{height:1px;background:var(--border);margin:22px 0;}
+.d-address{
+  display:flex;align-items:center;gap:8px;margin-top:16px;margin-bottom:4px;
+  font-size:13px;font-weight:700;color:var(--blue);text-decoration:none;
+  background:rgba(21,101,192,0.07);border:1px solid rgba(21,101,192,0.18);
+  border-radius:10px;padding:9px 13px;width:fit-content;
+  transition:background 0.2s;
+}
+.d-address:hover{background:rgba(21,101,192,0.13);}
+.d-address i{font-size:14px;color:var(--blue);flex-shrink:0;}
 
 /* Menu items */
 .menu-item{background:var(--surface);border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid var(--border);}
@@ -381,23 +390,7 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 .nm-save{width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:'Nunito',sans-serif;font-size:16px;font-weight:900;cursor:pointer;}
 
 /* Loading screen */
-/* ── LOGIN SCREEN ── */
-#login-screen{
-  position:fixed;inset:0;z-index:998;
-  background:linear-gradient(160deg,#FFF8E7 0%,#FDE8C0 55%,#F5D49A 100%);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:24px;transition:opacity 0.4s ease;
-}
-#login-screen.hide{opacity:0;pointer-events:none;}
-.login-card{
-  background:#fff;border-radius:24px;padding:36px 28px 32px;
-  max-width:360px;width:100%;text-align:center;
-  box-shadow:0 8px 40px rgba(44,24,16,0.14);border:1px solid var(--border);
-}
-.login-logo{font-size:60px;margin-bottom:8px;}
-.login-title{font-size:26px;font-weight:900;color:var(--text);margin-bottom:6px;}
-.login-title .ac{color:var(--accent);}
-.login-sub{font-size:13px;color:var(--subtext);margin-bottom:28px;line-height:1.5;}
+/* ── SHARED GOOGLE BUTTON ── */
 .google-btn{
   display:flex;align-items:center;justify-content:center;gap:12px;
   width:100%;padding:14px 20px;border-radius:12px;cursor:pointer;
@@ -409,6 +402,16 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 .google-btn svg{flex-shrink:0;}
 .login-privacy{font-size:11px;color:var(--subtext);margin-top:18px;line-height:1.5;opacity:0.8;}
 .ph-email{font-size:11px;color:var(--subtext);margin-top:2px;opacity:0.8;}
+
+/* ── PROFILE SIGN-IN CARD ── */
+.profile-signin-card{
+  margin:32px 20px;background:var(--surface);border-radius:20px;
+  padding:40px 24px 32px;text-align:center;
+  border:1px solid var(--border);box-shadow:0 4px 24px rgba(44,24,16,0.08);
+}
+.psc-logo{font-size:52px;margin-bottom:12px;}
+.psc-title{font-size:20px;font-weight:900;color:var(--text);margin-bottom:8px;}
+.psc-sub{font-size:13px;color:var(--subtext);margin-bottom:28px;line-height:1.6;}
 
 /* ── SIGN-OUT BUTTON ── */
 .signout-btn{
@@ -480,27 +483,6 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
     <div class="ls-dot"></div>
     <div class="ls-dot"></div>
     <div class="ls-dot"></div>
-  </div>
-</div>
-
-<!-- ── LOGIN SCREEN ── -->
-<div id="login-screen" style="display:none;">
-  <div class="login-card">
-    <div class="login-logo">🌭</div>
-    <div class="login-title">Frank <span class="ac">Finder</span></div>
-    <div class="login-sub">Sign in to save your reviews,<br>track visits, and earn badges.</div>
-    <button class="google-btn" onclick="signInWithGoogle()">
-      <!-- Google "G" logo SVG -->
-      <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
-        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-        <path fill="none" d="M0 0h48v48H0z"/>
-      </svg>
-      Continue with Google
-    </button>
-    <div class="login-privacy">By signing in you agree to our terms.<br>We only store your nickname, level & reviews.</div>
   </div>
 </div>
 
@@ -577,7 +559,7 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
     <div class="page-header">
       <span style="font-size:22px;">👤</span>
       <div class="page-title">My <span class="accent">Profile</span></div>
-      <button class="signout-btn" onclick="signOutUser()" title="Sign out">
+      <button class="signout-btn" id="signout-btn" onclick="signOutUser()" title="Sign out" style="display:none;">
         <i class="fa-solid fa-right-from-bracket"></i>
       </button>
     </div>
@@ -736,7 +718,7 @@ const LEVELS = [
 
 const RESTAURANTS = [
   {
-    id:1, name:"Rutt's Riphouse", lat:40.8584, lng:-74.1579,
+    id:1, name:"Rutt's Riphouse", lat:40.8584, lng:-74.1579, address:"417 River Rd, Clifton, NJ 07014",
     rating:4.9, reviewCount:1847, emoji:"🔥",
     bg:"linear-gradient(135deg,#6B0000,#B71C1C)",
     description:"A Clifton landmark since 1928 — the birthplace of the NJ Ripper. Deep-fried in soybean oil until the skin cracks and curls, the Ripper is unlike any other hot dog in America. Cash only, no excuses. The line forms at 10am.",
@@ -756,7 +738,7 @@ const RESTAURANTS = [
     hasSpecial:true,
   },
   {
-    id:2, name:"Jimmy B's Italian Dogs", lat:40.7876, lng:-74.2552,
+    id:2, name:"Jimmy B's Italian Dogs", lat:40.7876, lng:-74.2552, address:"128 Maplewood Ave, Maplewood, NJ 07040",
     rating:4.8, reviewCount:1243, emoji:"🇮🇹",
     bg:"linear-gradient(135deg,#1A3A5C,#2471A3)",
     description:"The Italian Hot Dog is a New Jersey original and Jimmy B's is the gold standard. A deep-fried frank stuffed into a round of Italian bread hollowed out like a boat, loaded with fried potatoes, peppers, and onions. Nothing like it on Earth.",
@@ -776,7 +758,7 @@ const RESTAURANTS = [
     hasSpecial:true,
   },
   {
-    id:3, name:"The Windmill", lat:40.3470, lng:-74.0745,
+    id:3, name:"The Windmill", lat:40.3470, lng:-74.0745, address:"586 Ocean Ave, Long Branch, NJ 07740",
     rating:4.5, reviewCount:987, emoji:"🌀",
     bg:"linear-gradient(135deg,#7B3F00,#D4681E)",
     description:"A Shore institution since 1964. The Windmill has been spinning out legendary franks to generations of Jersey Shore families. Their perfectly grilled all-beef dogs and foot-long Coney are the taste of summer in New Jersey.",
@@ -795,7 +777,7 @@ const RESTAURANTS = [
     hasSpecial:true,
   },
   {
-    id:4, name:"Hiram's Roadstand", lat:40.8509, lng:-73.9709,
+    id:4, name:"Hiram's Roadstand", lat:40.8509, lng:-73.9709, address:"1345 Palisade Ave, Fort Lee, NJ 07024",
     rating:4.7, reviewCount:876, emoji:"🛣️",
     bg:"linear-gradient(135deg,#2C3E50,#4A6070)",
     description:"Fort Lee's legendary roadside stand since 1932. Hiram's is famous for the Texas Wiener — a NJ twist on the chili dog smothered in a spiced Coney-style sauce — and their shatteringly crispy deep-fried dogs. The George Washington Bridge was built nearby. The hot dogs are older.",
@@ -815,7 +797,7 @@ const RESTAURANTS = [
     hasSpecial:false,
   },
   {
-    id:5, name:"Max's Frankfurters", lat:40.3044, lng:-74.0035,
+    id:5, name:"Max's Frankfurters", lat:40.3044, lng:-74.0035, address:"25 Washington St, Long Branch, NJ 07740",
     rating:4.8, reviewCount:654, emoji:"⭐",
     bg:"linear-gradient(135deg,#00416A,#0078A8)",
     description:"Long Branch's crown jewel since 1928. Max's is the place Springsteen probably grabbed a dog before he was famous. Their all-beef Sabrett franks are grilled on a flat-top to perfection, and the chili is cooked low and slow every morning.",
@@ -835,7 +817,7 @@ const RESTAURANTS = [
     hasSpecial:true,
   },
   {
-    id:6, name:"Callahan's Drive-In", lat:40.9987, lng:-73.9598,
+    id:6, name:"Callahan's Drive-In", lat:40.9987, lng:-73.9598, address:"180 Central Ave, White Plains, NY 10606",
     rating:4.4, reviewCount:543, emoji:"🚗",
     bg:"linear-gradient(135deg,#1A4D2E,#2E8B57)",
     description:"A Bergen County drive-in institution since 1958. Callahan's still does things the old way — hop out of your car, order at the window, eat in the lot. Their California Dog with ketchup, mustard, relish, and sauerkraut is a NJ roadside classic.",
@@ -854,7 +836,7 @@ const RESTAURANTS = [
     hasSpecial:false,
   },
   {
-    id:7, name:"Garden State Grille", lat:40.8259, lng:-74.2090,
+    id:7, name:"Garden State Grille", lat:40.8259, lng:-74.2090, address:"42 Main St, Livingston, NJ 07039",
     rating:4.5, reviewCount:378, emoji:"🌿",
     bg:"linear-gradient(135deg,#2D4739,#3D7A56)",
     description:"Montclair's elevated take on the NJ hot dog experience. Garden State Grille pairs craft dogs with local beers and gourmet toppings without losing the soul of what makes a Jersey frank great. The truffle Italian Dog is their calling card.",
@@ -873,7 +855,7 @@ const RESTAURANTS = [
     hasSpecial:true,
   },
   {
-    id:8, name:"Asbury Dogs", lat:40.2204, lng:-74.0121,
+    id:8, name:"Asbury Dogs", lat:40.2204, lng:-74.0121, address:"605 Cookman Ave, Asbury Park, NJ 07712",
     rating:4.4, reviewCount:312, emoji:"🎸",
     bg:"linear-gradient(135deg,#1A0533,#5C1090)",
     description:"As gritty and cool as the city it lives in, Asbury Dogs sits a block from the Stone Pony and serves dogs until 2am on weekends. Their Sonoran-style and fusion dogs have a devoted following among the boardwalk music crowd.",
@@ -892,7 +874,7 @@ const RESTAURANTS = [
     hasSpecial:true,
   },
   {
-    id:9, name:"Trenton Makes Dogs", lat:40.2171, lng:-74.7429,
+    id:9, name:"Trenton Makes Dogs", lat:40.2171, lng:-74.7429, address:"220 S Broad St, Trenton, NJ 08608",
     rating:4.3, reviewCount:289, emoji:"🏛️",
     bg:"linear-gradient(135deg,#1C1C4E,#3232A0)",
     description:"Named after Trenton's famous bridge slogan, this South Jersey institution has been fueling state workers and locals since 1971. Their Capital City Coney is a South Jersey take on the Detroit classic, with a chili recipe from the original owner's family.",
@@ -911,7 +893,7 @@ const RESTAURANTS = [
     hasSpecial:false,
   },
   {
-    id:10, name:"Hot Grill", lat:40.8713, lng:-74.1414,
+    id:10, name:"Hot Grill", lat:40.8713, lng:-74.1414, address:"669 Lexington Ave, Clifton, NJ 07011",
     rating:4.8, reviewCount:1102, emoji:"♨️",
     bg:"linear-gradient(135deg,#7A0E00,#C62828)",
     description:"Another Clifton colossus — Hot Grill has been serving NJ's iconic Texas Wiener since 1961. Don't confuse this with a Texan chili dog. The NJ Texas Wiener is a deep-fried frank topped with a spiced Greek-style meat sauce, a tradition brought by Greek immigrants to Paterson and Clifton.",
@@ -931,7 +913,7 @@ const RESTAURANTS = [
     hasSpecial:true,
   },
   {
-    id:11, name:"Syd's Drive-In", lat:40.7967, lng:-74.4815,
+    id:11, name:"Syd's Drive-In", lat:40.7967, lng:-74.4815, address:"8 US-46, Netcong, NJ 07857",
     rating:4.3, reviewCount:234, emoji:"🏎️",
     bg:"linear-gradient(135deg,#3D1500,#854700)",
     description:"A Morris County drive-in beloved since 1955. Syd's is known for its no-nonsense approach: simple dogs, simple prices, and the best onion rings in the county. Their Texas Wiener keeps Morris County in the NJ hot dog conversation.",
@@ -950,7 +932,7 @@ const RESTAURANTS = [
     hasSpecial:false,
   },
   {
-    id:12, name:"Dickie Dee's", lat:40.7940, lng:-74.1502,
+    id:12, name:"Dickie Dee's", lat:40.7940, lng:-74.1502, address:"380 Kearny Ave, Kearny, NJ 07032",
     rating:4.6, reviewCount:678, emoji:"🎉",
     bg:"linear-gradient(135deg,#4A0000,#8B0000)",
     description:"A Newark-area legend since 1956, Dickie Dee's is beloved for its pizza sausage — but its hot dogs are a closely guarded second obsession. The Italian Dog here uses a recipe unchanged since Eisenhower was president, and the chili is pure Newark soul food.",
@@ -1386,6 +1368,11 @@ function openDetail(id) {
       ${r.brands.map(b => `<span class="dbadge dbadge-brand">${b}</span>`).join('')}
     </div>
 
+    ${r.address ? `
+    <a class="d-address" href="https://maps.google.com/maps?q=${encodeURIComponent(r.address)}" target="_blank" rel="noopener">
+      <i class="fa-solid fa-location-dot"></i>${r.address}
+    </a>` : ''}
+
     <div class="d-section">
       <div class="d-section-title"><i class="fa-solid fa-circle-info"></i> About</div>
       <div class="d-desc">${r.description}</div>
@@ -1557,7 +1544,36 @@ function renderSpecialsContent() {
 //  PROFILE PAGE
 // ═══════════════════════════════════════════
 
+const GOOGLE_G_SVG = `<svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+  <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+  <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+  <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+  <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+  <path fill="none" d="M0 0h48v48H0z"/>
+</svg>`;
+
 function renderProfile() {
+  // Show/hide sign-out button based on auth state
+  const signoutBtn = document.getElementById('signout-btn');
+  if (signoutBtn) signoutBtn.style.display = currentUser ? 'flex' : 'none';
+
+  // Anonymous user — show sign-in prompt
+  if (!currentUser) {
+    document.getElementById('profile-content').innerHTML = `
+      <div class="profile-signin-card">
+        <div class="psc-logo">🌭</div>
+        <div class="psc-title">Join Frank Finder</div>
+        <div class="psc-sub">Sign in to save your reviews,<br>track visits, and earn badges.</div>
+        <button class="google-btn" onclick="signInWithGoogle()">
+          ${GOOGLE_G_SVG}
+          Continue with Google
+        </button>
+        <div class="login-privacy">By signing in you agree to our terms.<br>We only store your nickname, level & reviews.</div>
+      </div>
+    `;
+    return;
+  }
+
   const { nickname, photoUrl, reviews, visitCount } = state.user;
   const level = getLevelInfo(reviews.length);
   const progress = getLevelProgress(reviews.length);
@@ -1576,16 +1592,13 @@ function renderProfile() {
   }).join('');
 
   // Prefer the Google photo URL from the signed-in user; fall back to session upload
-  const googlePhoto = currentUser ? currentUser.photoURL : null;
+  const googlePhoto = currentUser.photoURL || null;
   const displayPhoto = googlePhoto || photoUrl;
   const avatarInner = displayPhoto
     ? `<img src="${displayPhoto}" alt="avatar" referrerpolicy="no-referrer">`
     : `<span>${nickname[0].toUpperCase()}</span>`;
 
-  // Show Google email if signed in
-  const emailLine = currentUser
-    ? `<div class="ph-email">${currentUser.email}</div>`
-    : '';
+  const emailLine = `<div class="ph-email">${currentUser.email}</div>`;
 
   document.getElementById('profile-content').innerHTML = `
     <div class="profile-hero">
@@ -1762,65 +1775,38 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('radius-val').textContent = this.value + 'mi';
   });
 
-  let minTimeDone = false;
-  let authDone    = false;
-  let authedUser  = null;
+  let splashDone = false;
+  let authReady  = false;
 
   function maybeReveal() {
-    if (!minTimeDone || !authDone) return;
-    // Hide loading screen
+    if (!splashDone || !authReady) return;
+    // Hide loading screen and show app — everyone gets in
     document.getElementById('loading-screen').classList.add('hide');
     setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 500);
-
-    if (authedUser) {
-      // Signed in — show app
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('app').style.display = 'flex';
-      initMap();
-    } else {
-      // Not signed in — show login screen
-      document.getElementById('app').style.display = 'none';
-      const ls = document.getElementById('login-screen');
-      ls.style.display = 'flex';
-      setTimeout(() => ls.classList.remove('hide'), 10);
-    }
+    document.getElementById('app').style.display = 'flex';
+    initMap();
   }
 
   // Minimum splash duration (1.4 s)
-  setTimeout(() => { minTimeDone = true; maybeReveal(); }, 1400);
+  setTimeout(() => { splashDone = true; maybeReveal(); }, 1400);
 
-  // Start app div hidden until auth resolves
+  // Start app hidden during splash
   document.getElementById('app').style.display = 'none';
 
   // Process any pending redirect FIRST, then wire up the auth listener.
-  // This prevents onAuthStateChanged(null) from firing before the redirect
-  // result is processed and incorrectly showing the login screen.
   function setupAuthListener() {
     auth.onAuthStateChanged(async (user) => {
       currentUser = user;
       if (user) {
         try { await loadOrCreateProfile(user); } catch(e) { console.warn('Profile load error:', e); }
-        // If already revealed, switch to app view
-        if (authDone) {
-          document.getElementById('login-screen').style.display = 'none';
-          document.getElementById('app').style.display = 'flex';
-          if (!state.mapInited) initMap();
-          if (state.page === 'profile') renderProfile();
-        }
       } else {
-        // Signed out mid-session
         currentUser = null;
         userProfile = null;
         state.user = { nickname:'FrankFan', photoUrl:null, reviews:[], visitCount:0 };
-        if (authDone) {
-          document.getElementById('app').style.display = 'none';
-          const ls = document.getElementById('login-screen');
-          ls.style.display = 'flex';
-          setTimeout(() => ls.classList.remove('hide'), 10);
-        }
       }
-      authedUser = user;
-      authDone   = true;
+      // Re-render profile page if it's currently visible
+      if (state.page === 'profile') renderProfile();
+      authReady = true;
       maybeReveal();
     });
   }
