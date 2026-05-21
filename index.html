@@ -154,17 +154,19 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 .ctag{font-size:10px;font-weight:700;background:var(--surface3);color:var(--subtext);border-radius:4px;padding:2px 6px;}
 
 /* ── FILTER PANEL ── */
-#filter-overlay{position:fixed;inset:0;background:rgba(44,24,16,0.45);z-index:500;opacity:0;pointer-events:none;transition:opacity var(--tr);}
+#filter-overlay{position:fixed;top:0;left:0;right:0;bottom:var(--nav-height);background:rgba(44,24,16,0.45);z-index:500;opacity:0;pointer-events:none;transition:opacity var(--tr);}
 #filter-overlay.open{opacity:1;pointer-events:all;}
 #filter-panel{
   position:fixed;bottom:var(--nav-height);left:0;right:0;z-index:501;
-  background:var(--surface);border-radius:20px 20px 0 0;padding:0 20px 24px;
+  background:var(--surface);border-radius:20px 20px 0 0;
   transform:translateY(110%);transition:transform var(--tr);
-  max-height:78vh;overflow-y:auto;
+  max-height:78vh;display:flex;flex-direction:column;overflow:hidden;
 }
 #filter-panel.open{transform:translateY(0);}
-.fp-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:16px auto 20px;}
-.fp-title{font-size:18px;font-weight:900;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;}
+.fp-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:16px auto 0;flex-shrink:0;}
+.fp-title{font-size:18px;font-weight:900;padding:14px 20px 16px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.fp-scroll{flex:1;overflow-y:auto;padding:0 20px 8px;}
+.fp-footer{padding:10px 20px 22px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0;}
 .fp-clear{font-size:13px;font-weight:800;color:var(--accent);background:none;border:none;cursor:pointer;font-family:'Nunito',sans-serif;}
 .fp-section{margin-bottom:22px;}
 .fp-section-label{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:var(--subtext);margin-bottom:10px;}
@@ -411,9 +413,10 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 
 /* Leaflet light overrides */
 .leaflet-container{background:#F5ECD7!important;}
-.leaflet-control-zoom{border:1px solid var(--border)!important;}
+.leaflet-control-zoom{border:1px solid var(--border)!important;z-index:400!important;}
 .leaflet-control-zoom a{background:var(--surface)!important;color:var(--text)!important;border-color:var(--border)!important;}
 .leaflet-bar{box-shadow:0 2px 12px rgba(44,24,16,0.15)!important;}
+.leaflet-control-container{z-index:400!important;}
 .leaflet-popup-content-wrapper{background:var(--surface)!important;color:var(--text)!important;border:1px solid var(--border)!important;}
 
 /* Scrollbar */
@@ -548,49 +551,53 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
     <button class="fp-clear" onclick="clearFilters()">Clear All</button>
   </div>
 
-  <div class="fp-section">
-    <div class="fp-section-label">Radius</div>
-    <div class="radius-row">
-      <input type="range" class="radius-slider" id="radius-slider" min="1" max="25" value="10" oninput="document.getElementById('radius-val').textContent=this.value+'mi'">
-      <span class="radius-val" id="radius-val">10mi</span>
+  <div class="fp-scroll">
+    <div class="fp-section">
+      <div class="fp-section-label">Radius</div>
+      <div class="radius-row">
+        <input type="range" class="radius-slider" id="radius-slider" min="1" max="25" value="10" oninput="document.getElementById('radius-val').textContent=this.value+'mi'">
+        <span class="radius-val" id="radius-val">10mi</span>
+      </div>
+    </div>
+
+    <div class="fp-section">
+      <div class="fp-section-label">Minimum Rating</div>
+      <div class="rating-chips">
+        <button class="rchip active" data-min="0" onclick="selectRatingChip(this,0)">Any</button>
+        <button class="rchip" data-min="3" onclick="selectRatingChip(this,3)">★ 3+</button>
+        <button class="rchip" data-min="3.5" onclick="selectRatingChip(this,3.5)">★ 3.5+</button>
+        <button class="rchip" data-min="4" onclick="selectRatingChip(this,4)">★ 4+</button>
+        <button class="rchip" data-min="4.5" onclick="selectRatingChip(this,4.5)">★ 4.5+</button>
+      </div>
+    </div>
+
+    <div class="fp-section">
+      <div class="fp-section-label">Hotdog Style</div>
+      <div class="checkbox-grid">
+        <label class="cb-item"><input type="checkbox" class="style-cb" value="Chili Dog"><label>🌶️ Chili Dog</label></label>
+        <label class="cb-item"><input type="checkbox" class="style-cb" value="Italian Hotdog"><label>🇮🇹 Italian Dog</label></label>
+        <label class="cb-item"><input type="checkbox" class="style-cb" value="Corndog"><label>🌽 Corndog</label></label>
+        <label class="cb-item"><input type="checkbox" class="style-cb" value="Coney Dog"><label>🏙️ Coney Dog</label></label>
+        <label class="cb-item"><input type="checkbox" class="style-cb" value="Sonoran"><label>🌵 Sonoran</label></label>
+      </div>
+    </div>
+
+    <div class="fp-section">
+      <div class="fp-section-label">Brand Offered</div>
+      <div class="checkbox-grid">
+        <label class="cb-item"><input type="checkbox" class="brand-cb" value="Thumann's"><label>Thumann's</label></label>
+        <label class="cb-item"><input type="checkbox" class="brand-cb" value="Sabrett"><label>Sabrett</label></label>
+        <label class="cb-item"><input type="checkbox" class="brand-cb" value="Nathan's"><label>Nathan's</label></label>
+        <label class="cb-item"><input type="checkbox" class="brand-cb" value="Hebrew National"><label>Hebrew Nat'l</label></label>
+        <label class="cb-item"><input type="checkbox" class="brand-cb" value="Ball Park"><label>Ball Park</label></label>
+        <label class="cb-item"><input type="checkbox" class="brand-cb" value="Oscar Mayer"><label>Oscar Mayer</label></label>
+      </div>
     </div>
   </div>
 
-  <div class="fp-section">
-    <div class="fp-section-label">Minimum Rating</div>
-    <div class="rating-chips">
-      <button class="rchip active" data-min="0" onclick="selectRatingChip(this,0)">Any</button>
-      <button class="rchip" data-min="3" onclick="selectRatingChip(this,3)">★ 3+</button>
-      <button class="rchip" data-min="3.5" onclick="selectRatingChip(this,3.5)">★ 3.5+</button>
-      <button class="rchip" data-min="4" onclick="selectRatingChip(this,4)">★ 4+</button>
-      <button class="rchip" data-min="4.5" onclick="selectRatingChip(this,4.5)">★ 4.5+</button>
-    </div>
+  <div class="fp-footer">
+    <button class="fp-apply" onclick="applyFilters()">Apply Filters</button>
   </div>
-
-  <div class="fp-section">
-    <div class="fp-section-label">Hotdog Style</div>
-    <div class="checkbox-grid">
-      <label class="cb-item"><input type="checkbox" class="style-cb" value="Chili Dog"><label>🌶️ Chili Dog</label></label>
-      <label class="cb-item"><input type="checkbox" class="style-cb" value="Italian Hotdog"><label>🇮🇹 Italian Dog</label></label>
-      <label class="cb-item"><input type="checkbox" class="style-cb" value="Corndog"><label>🌽 Corndog</label></label>
-      <label class="cb-item"><input type="checkbox" class="style-cb" value="Coney Dog"><label>🏙️ Coney Dog</label></label>
-      <label class="cb-item"><input type="checkbox" class="style-cb" value="Sonoran"><label>🌵 Sonoran</label></label>
-    </div>
-  </div>
-
-  <div class="fp-section">
-    <div class="fp-section-label">Brand Offered</div>
-    <div class="checkbox-grid">
-      <label class="cb-item"><input type="checkbox" class="brand-cb" value="Thumann's"><label>Thumann's</label></label>
-      <label class="cb-item"><input type="checkbox" class="brand-cb" value="Sabrett"><label>Sabrett</label></label>
-      <label class="cb-item"><input type="checkbox" class="brand-cb" value="Nathan's"><label>Nathan's</label></label>
-      <label class="cb-item"><input type="checkbox" class="brand-cb" value="Hebrew National"><label>Hebrew Nat'l</label></label>
-      <label class="cb-item"><input type="checkbox" class="brand-cb" value="Ball Park"><label>Ball Park</label></label>
-      <label class="cb-item"><input type="checkbox" class="brand-cb" value="Oscar Mayer"><label>Oscar Mayer</label></label>
-    </div>
-  </div>
-
-  <button class="fp-apply" onclick="applyFilters()">Apply Filters</button>
 </div>
 
 <!-- ── RESTAURANT DETAIL OVERLAY ── -->
@@ -1251,6 +1258,7 @@ function clearFilters() {
   document.querySelectorAll('.rchip').forEach((c,i) => c.classList.toggle('active', i===0));
   document.querySelectorAll('.style-cb, .brand-cb').forEach(c => c.checked = false);
   document.getElementById('filter-btn').classList.remove('active');
+  closeFilters();
   showToast('Filters cleared', 'xmark');
 }
 
