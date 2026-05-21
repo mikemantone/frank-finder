@@ -1789,37 +1789,58 @@ document.addEventListener('DOMContentLoaded', () => {
   // Minimum splash duration (1.4 s)
   setTimeout(() => { minTimeDone = true; maybeReveal(); }, 1400);
 
-  // Firebase auth state listener
-  auth.onAuthStateChanged(async (user) => {
-    currentUser = user;
-    if (user) {
-      try { await loadOrCreateProfile(user); } catch(e) { console.warn('Profile load error:', e); }
-      // If already revealed, update profile view
-      if (authDone) {
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('app').style.display = 'flex';
-        if (!state.mapInited) initMap();
-        if (state.page === 'profile') renderProfile();
-      }
-    } else {
-      // Signed out mid-session
-      currentUser = null;
-      userProfile = null;
-      state.user = { nickname:'FrankFan', photoUrl:null, reviews:[], visitCount:0 };
-      if (authDone) {
-        document.getElementById('app').style.display = 'none';
-        const ls = document.getElementById('login-screen');
-        ls.style.display = 'flex';
-        setTimeout(() => ls.classList.remove('hide'), 10);
-      }
-    }
-    authedUser = user;
-    authDone   = true;
-    maybeReveal();
-  });
-
   // Start app div hidden until auth resolves
   document.getElementById('app').style.display = 'none';
+
+  // Process any pending redirect FIRST, then wire up the auth listener.
+  // This prevents onAuthStateChanged(null) from firing before the redirect
+  // result is processed and incorrectly showing the login screen.
+  function setupAuthListener() {
+    auth.onAuthStateChanged(async (user) => {
+      currentUser = user;
+      if (user) {
+        try { await loadOrCreateProfile(user); } catch(e) { console.warn('Profile load error:', e); }
+        // If already revealed, switch to app view
+        if (authDone) {
+          document.getElementById('login-screen').style.display = 'none';
+          document.getElementById('app').style.display = 'flex';
+          if (!state.mapInited) initMap();
+          if (state.page === 'profile') renderProfile();
+        }
+      } else {
+        // Signed out mid-session
+        currentUser = null;
+        userProfile = null;
+        state.user = { nickname:'FrankFan', photoUrl:null, reviews:[], visitCount:0 };
+        if (authDone) {
+          document.getElementById('app').style.display = 'none';
+          const ls = document.getElementById('login-screen');
+          ls.style.display = 'flex';
+          setTimeout(() => ls.classList.remove('hide'), 10);
+        }
+      }
+      authedUser = user;
+      authDone   = true;
+      maybeReveal();
+    });
+  }
+
+  // Wait for redirect result before listening to auth state
+  auth.getRedirectResult()
+    .then(result => {
+      if (result && result.user) {
+        console.log('Redirect sign-in completed:', result.user.email);
+      }
+    })
+    .catch(err => {
+      console.error('Redirect result error:', err);
+      if (err.code && !['auth/popup-closed-by-user','auth/cancelled-popup-request'].includes(err.code)) {
+        showToast('Sign-in failed. Please try again.', 'triangle-exclamation');
+      }
+    })
+    .finally(() => {
+      setupAuthListener();
+    });
 });
 </script>
 </body>
