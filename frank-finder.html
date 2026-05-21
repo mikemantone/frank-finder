@@ -1682,7 +1682,7 @@ async function saveNickname() {
 async function signInWithGoogle() {
   try {
     const provider = new firebase.auth.GoogleAuthProvider();
-    await auth.signInWithRedirect(provider);
+    await auth.signInWithPopup(provider);
     // onAuthStateChanged fires next — it handles the rest
   } catch(e) {
     if (e.code !== 'auth/popup-closed-by-user') {
