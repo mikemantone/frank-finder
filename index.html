@@ -306,9 +306,9 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 .sct-holiday{background:var(--primary-dim);color:var(--primary);}
 .sc-expires{font-size:11px;color:var(--subtext);}
 
-/* ── ACCOUNT PAGE ── */
-#account-page{overflow-y:auto;}
-.account-content{padding-bottom:28px;}
+/* ── PROFILE PAGE ── */
+#profile-page{overflow-y:auto;}
+.profile-content{padding-bottom:28px;}
 .profile-hero{
   background:linear-gradient(160deg,var(--surface2) 0%,var(--surface) 100%);
   padding:24px 20px 20px;border-bottom:1px solid var(--border);
@@ -381,6 +381,44 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 .nm-save{width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:'Nunito',sans-serif;font-size:16px;font-weight:900;cursor:pointer;}
 
 /* Loading screen */
+/* ── LOGIN SCREEN ── */
+#login-screen{
+  position:fixed;inset:0;z-index:998;
+  background:linear-gradient(160deg,#FFF8E7 0%,#FDE8C0 55%,#F5D49A 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px;transition:opacity 0.4s ease;
+}
+#login-screen.hide{opacity:0;pointer-events:none;}
+.login-card{
+  background:#fff;border-radius:24px;padding:36px 28px 32px;
+  max-width:360px;width:100%;text-align:center;
+  box-shadow:0 8px 40px rgba(44,24,16,0.14);border:1px solid var(--border);
+}
+.login-logo{font-size:60px;margin-bottom:8px;}
+.login-title{font-size:26px;font-weight:900;color:var(--text);margin-bottom:6px;}
+.login-title .ac{color:var(--accent);}
+.login-sub{font-size:13px;color:var(--subtext);margin-bottom:28px;line-height:1.5;}
+.google-btn{
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  width:100%;padding:14px 20px;border-radius:12px;cursor:pointer;
+  background:#fff;border:1.5px solid #dadce0;
+  font-family:'Nunito',sans-serif;font-size:15px;font-weight:800;color:#3c4043;
+  transition:box-shadow 0.2s,background 0.2s;
+}
+.google-btn:hover{background:#f8f9fa;box-shadow:0 2px 12px rgba(0,0,0,0.1);}
+.google-btn svg{flex-shrink:0;}
+.login-privacy{font-size:11px;color:var(--subtext);margin-top:18px;line-height:1.5;opacity:0.8;}
+.ph-email{font-size:11px;color:var(--subtext);margin-top:2px;opacity:0.8;}
+
+/* ── SIGN-OUT BUTTON ── */
+.signout-btn{
+  width:36px;height:36px;border-radius:10px;border:1px solid var(--border);
+  background:var(--surface3);color:var(--subtext);display:flex;align-items:center;
+  justify-content:center;cursor:pointer;font-size:14px;transition:all var(--tr);
+  flex-shrink:0;margin-left:auto;
+}
+.signout-btn:hover{background:var(--accent-dim);color:var(--accent);border-color:var(--accent);}
+
 #loading-screen{
   position:fixed;inset:0;z-index:1000;
   background:linear-gradient(160deg,#FFF8E7 0%,#FDE8C0 55%,#F5D49A 100%);
@@ -442,6 +480,27 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
     <div class="ls-dot"></div>
     <div class="ls-dot"></div>
     <div class="ls-dot"></div>
+  </div>
+</div>
+
+<!-- ── LOGIN SCREEN ── -->
+<div id="login-screen" style="display:none;">
+  <div class="login-card">
+    <div class="login-logo">🌭</div>
+    <div class="login-title">Frank <span class="ac">Finder</span></div>
+    <div class="login-sub">Sign in to save your reviews,<br>track visits, and earn badges.</div>
+    <button class="google-btn" onclick="signInWithGoogle()">
+      <!-- Google "G" logo SVG -->
+      <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+        <path fill="none" d="M0 0h48v48H0z"/>
+      </svg>
+      Continue with Google
+    </button>
+    <div class="login-privacy">By signing in you agree to our terms.<br>We only store your nickname, level & reviews.</div>
   </div>
 </div>
 
@@ -513,13 +572,16 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
     <div class="specials-content" id="specials-content"></div>
   </div>
 
-  <!-- ── ACCOUNT PAGE ── -->
-  <div id="account-page" class="page">
+  <!-- ── PROFILE PAGE ── -->
+  <div id="profile-page" class="page">
     <div class="page-header">
       <span style="font-size:22px;">👤</span>
-      <div class="page-title">My <span class="accent">Account</span></div>
+      <div class="page-title">My <span class="accent">Profile</span></div>
+      <button class="signout-btn" onclick="signOutUser()" title="Sign out">
+        <i class="fa-solid fa-right-from-bracket"></i>
+      </button>
     </div>
-    <div class="account-content" id="account-content"></div>
+    <div class="profile-content" id="profile-content"></div>
   </div>
 
   <!-- ── BOTTOM NAV ── -->
@@ -534,9 +596,9 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
       Specials
       <div class="nav-dot"></div>
     </button>
-    <button class="nav-btn" id="nav-account" onclick="navTo('account')">
+    <button class="nav-btn" id="nav-profile" onclick="navTo('profile')">
       <i class="fa-solid fa-user"></i>
-      Account
+      Profile
       <div class="nav-dot"></div>
     </button>
   </nav>
@@ -631,9 +693,30 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 <!-- ══════════════════════════════════════════════
      SCRIPTS
 ══════════════════════════════════════════════ -->
+<!-- Firebase SDK (compat v10) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 'use strict';
+
+// ═══════════════════════════════════════════
+//  FIREBASE CONFIG  (replace placeholders with values from your Firebase Console)
+// ═══════════════════════════════════════════
+const firebaseConfig = {
+  apiKey:            "YOUR_API_KEY",
+  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
+  projectId:         "YOUR_PROJECT_ID",
+  storageBucket:     "YOUR_PROJECT_ID.appspot.com",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId:             "YOUR_APP_ID"
+};
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
+let currentUser  = null;   // Firebase Auth user object
+let userProfile  = null;   // Firestore profile doc data
 
 // ═══════════════════════════════════════════
 //  MOCK DATA
@@ -1053,7 +1136,7 @@ function getFilteredRestaurants() {
 
 function navTo(page) {
   state.page = page;
-  ['locator','specials','account'].forEach(p => {
+  ['locator','specials','profile'].forEach(p => {
     document.getElementById(`${p}-page`).classList.toggle('active', p === page);
     document.getElementById(`nav-${p}`).classList.toggle('active', p === page);
   });
@@ -1061,7 +1144,7 @@ function navTo(page) {
     setTimeout(() => state.map.invalidateSize(), 100);
   }
   if (page === 'specials') renderSpecials();
-  if (page === 'account') renderAccount();
+  if (page === 'profile') renderProfile();
 }
 
 // ═══════════════════════════════════════════
@@ -1371,21 +1454,34 @@ function setReviewStar(val) {
   });
 }
 
-function submitReview(restaurantId) {
+async function submitReview(restaurantId) {
   const text = document.getElementById('rv-textarea').value.trim();
   if (!state.reviewStarInput) { showToast('Please select a star rating', 'triangle-exclamation'); return; }
   if (text.length < 10) { showToast('Write at least 10 characters', 'triangle-exclamation'); return; }
 
   const review = {
     restaurantId,
-    rating: state.reviewStarInput,
+    rating:       state.reviewStarInput,
     text,
-    date: new Date().toISOString().split('T')[0],
+    date:         new Date().toISOString().split('T')[0],
+    userId:       currentUser ? currentUser.uid : 'guest',
+    userNickname: state.user.nickname,
+    createdAt:    firebase.firestore.FieldValue.serverTimestamp()
   };
-  state.user.reviews.push(review);
-  state.user.visitCount++;
 
-  // Update the restaurant's review count in memory
+  // Write to Firestore
+  if (currentUser) {
+    try {
+      await db.collection('reviews').add(review);
+      await db.collection('users').doc(currentUser.uid).update({
+        visitCount: firebase.firestore.FieldValue.increment(1)
+      });
+    } catch(e) { console.warn('Firestore review write failed:', e); }
+  }
+
+  // Update local state
+  state.user.reviews.unshift(review);
+  state.user.visitCount++;
   const r = RESTAURANTS.find(x => x.id === restaurantId);
   if (r) r.reviewCount++;
 
@@ -1457,10 +1553,10 @@ function renderSpecialsContent() {
 }
 
 // ═══════════════════════════════════════════
-//  ACCOUNT PAGE
+//  PROFILE PAGE
 // ═══════════════════════════════════════════
 
-function renderAccount() {
+function renderProfile() {
   const { nickname, photoUrl, reviews, visitCount } = state.user;
   const level = getLevelInfo(reviews.length);
   const progress = getLevelProgress(reviews.length);
@@ -1478,11 +1574,19 @@ function renderAccount() {
     `;
   }).join('');
 
-  const avatarInner = photoUrl
-    ? `<img src="${photoUrl}" alt="avatar">`
+  // Prefer the Google photo URL from the signed-in user; fall back to session upload
+  const googlePhoto = currentUser ? currentUser.photoURL : null;
+  const displayPhoto = googlePhoto || photoUrl;
+  const avatarInner = displayPhoto
+    ? `<img src="${displayPhoto}" alt="avatar" referrerpolicy="no-referrer">`
     : `<span>${nickname[0].toUpperCase()}</span>`;
 
-  document.getElementById('account-content').innerHTML = `
+  // Show Google email if signed in
+  const emailLine = currentUser
+    ? `<div class="ph-email">${currentUser.email}</div>`
+    : '';
+
+  document.getElementById('profile-content').innerHTML = `
     <div class="profile-hero">
       <div class="ph-top">
         <div class="ph-avatar-wrap">
@@ -1498,6 +1602,7 @@ function renderAccount() {
             ${nickname}
             <button class="ph-edit-nick" onclick="openNickModal()" title="Edit nickname"><i class="fa-solid fa-pen"></i></button>
           </div>
+          ${emailLine}
           <div class="ph-level-badge">
             <span class="plb-emoji">${level.emoji}</span>
             <span class="plb-name">${level.name}</span>
@@ -1554,13 +1659,79 @@ function closeNickModal() {
   document.getElementById('nick-modal').classList.remove('open');
 }
 
-function saveNickname() {
+async function saveNickname() {
   const val = document.getElementById('nm-input').value.trim();
   if (val.length < 2) { showToast('Nickname must be at least 2 characters','triangle-exclamation'); return; }
   state.user.nickname = val;
   closeNickModal();
-  renderAccount();
+  // Persist to Firestore if signed in
+  if (currentUser) {
+    try {
+      await db.collection('users').doc(currentUser.uid).update({ nickname: val });
+    } catch(e) { console.warn('Firestore write failed:', e); }
+  }
+  renderProfile();
   showToast('Nickname updated!', 'check');
+}
+
+// ═══════════════════════════════════════════
+//  FIREBASE AUTH
+// ═══════════════════════════════════════════
+
+async function signInWithGoogle() {
+  try {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    await auth.signInWithPopup(provider);
+    // onAuthStateChanged fires next — it handles the rest
+  } catch(e) {
+    if (e.code !== 'auth/popup-closed-by-user') {
+      showToast('Sign-in failed. Please try again.', 'triangle-exclamation');
+      console.error('Google sign-in error:', e);
+    }
+  }
+}
+
+async function signOutUser() {
+  try {
+    await auth.signOut();
+    // onAuthStateChanged fires next — shows login screen
+  } catch(e) {
+    showToast('Sign-out failed', 'triangle-exclamation');
+  }
+}
+
+async function loadOrCreateProfile(user) {
+  const ref = db.collection('users').doc(user.uid);
+  const snap = await ref.get();
+
+  if (snap.exists) {
+    userProfile = snap.data();
+    // Sync state from Firestore
+    state.user.nickname  = userProfile.nickname  || user.displayName || 'FrankFan';
+    state.user.photoUrl  = user.photoURL          || null;
+    state.user.visitCount = userProfile.visitCount || 0;
+
+    // Load this user's reviews from Firestore
+    const rvSnap = await db.collection('reviews')
+      .where('userId', '==', user.uid)
+      .orderBy('createdAt', 'desc')
+      .get();
+    state.user.reviews = rvSnap.docs.map(d => d.data());
+  } else {
+    // New user — create their profile doc
+    const defaultNick = (user.displayName || 'FrankFan').replace(/\s+/g, '');
+    userProfile = {
+      nickname:   defaultNick,
+      photoUrl:   user.photoURL || null,
+      visitCount: 0,
+      createdAt:  firebase.firestore.FieldValue.serverTimestamp()
+    };
+    await ref.set(userProfile);
+    state.user.nickname  = defaultNick;
+    state.user.photoUrl  = user.photoURL || null;
+    state.user.visitCount = 0;
+    state.user.reviews   = [];
+  }
 }
 
 function handleAvatarUpload(e) {
@@ -1569,7 +1740,7 @@ function handleAvatarUpload(e) {
   const reader = new FileReader();
   reader.onload = evt => {
     state.user.photoUrl = evt.target.result;
-    renderAccount();
+    renderProfile();
     showToast('Profile photo updated!', 'check');
   };
   reader.readAsDataURL(file);
@@ -1585,17 +1756,69 @@ document.getElementById('nm-input')?.addEventListener('keydown', e => {
 // ═══════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Hide loading screen after a beat
-  setTimeout(() => {
-    document.getElementById('loading-screen').classList.add('hide');
-    setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 500);
-    initMap();
-  }, 1800);
-
   // Radius slider live update
   document.getElementById('radius-slider').addEventListener('input', function() {
     document.getElementById('radius-val').textContent = this.value + 'mi';
   });
+
+  let minTimeDone = false;
+  let authDone    = false;
+  let authedUser  = null;
+
+  function maybeReveal() {
+    if (!minTimeDone || !authDone) return;
+    // Hide loading screen
+    document.getElementById('loading-screen').classList.add('hide');
+    setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 500);
+
+    if (authedUser) {
+      // Signed in — show app
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'flex';
+      initMap();
+    } else {
+      // Not signed in — show login screen
+      document.getElementById('app').style.display = 'none';
+      const ls = document.getElementById('login-screen');
+      ls.style.display = 'flex';
+      setTimeout(() => ls.classList.remove('hide'), 10);
+    }
+  }
+
+  // Minimum splash duration (1.4 s)
+  setTimeout(() => { minTimeDone = true; maybeReveal(); }, 1400);
+
+  // Firebase auth state listener
+  auth.onAuthStateChanged(async (user) => {
+    currentUser = user;
+    if (user) {
+      try { await loadOrCreateProfile(user); } catch(e) { console.warn('Profile load error:', e); }
+      // If already revealed, update profile view
+      if (authDone) {
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        if (!state.mapInited) initMap();
+        if (state.page === 'profile') renderProfile();
+      }
+    } else {
+      // Signed out mid-session
+      currentUser = null;
+      userProfile = null;
+      state.user = { nickname:'FrankFan', photoUrl:null, reviews:[], visitCount:0 };
+      if (authDone) {
+        document.getElementById('app').style.display = 'none';
+        const ls = document.getElementById('login-screen');
+        ls.style.display = 'flex';
+        setTimeout(() => ls.classList.remove('hide'), 10);
+      }
+    }
+    authedUser = user;
+    authDone   = true;
+    maybeReveal();
+  });
+
+  // Start app div hidden until auth resolves
+  document.getElementById('app').style.display = 'none';
 });
 </script>
 </body>
