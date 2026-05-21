@@ -212,9 +212,10 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 .d-img-dot.active{background:#fff;}
 .d-scroll{flex:1;overflow-y:auto;padding:20px;}
 .d-name{font-size:24px;font-weight:900;margin-bottom:8px;}
-.d-rating-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.d-rating-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;cursor:pointer;width:fit-content;border-radius:8px;transition:opacity 0.15s;}
+.d-rating-row:hover{opacity:0.75;}
 .d-stars{color:var(--star);font-size:16px;font-weight:900;}
-.d-rcount{color:var(--subtext);font-size:13px;}
+.d-rcount{color:var(--subtext);font-size:13px;text-decoration:underline;text-underline-offset:2px;}
 .d-badges{display:flex;gap:6px;flex-wrap:wrap;}
 .dbadge{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;border:1px solid;}
 .dbadge-style{background:var(--primary-dim);border-color:rgba(240,165,0,0.3);color:var(--primary);}
@@ -253,8 +254,11 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 .rv-text{font-size:13px;color:var(--subtext);line-height:1.6;}
 
 /* Review form */
-.review-form{background:var(--surface2);border-radius:12px;padding:16px;margin-top:12px;border:1px solid var(--border);}
+.review-form{background:var(--surface2);border-radius:12px;padding:16px;margin-bottom:20px;border:1px solid var(--border);}
 .rf-title{font-size:15px;font-weight:900;margin-bottom:12px;}
+.rv-signin-prompt{text-align:center;padding:8px 0 4px;}
+.rv-signin-prompt p{font-size:13px;color:var(--subtext);margin-bottom:14px;line-height:1.5;}
+.rv-signin-prompt .google-btn{max-width:280px;margin:0 auto;font-size:14px;padding:11px 16px;}
 .star-input{display:flex;gap:8px;margin-bottom:12px;}
 .si-star{font-size:30px;cursor:pointer;color:var(--border);transition:color 0.15s,transform 0.15s;user-select:none;}
 .si-star.lit{color:var(--star);}
@@ -411,7 +415,11 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 }
 .psc-logo{font-size:52px;margin-bottom:12px;}
 .psc-title{font-size:20px;font-weight:900;color:var(--text);margin-bottom:8px;}
-.psc-sub{font-size:13px;color:var(--subtext);margin-bottom:28px;line-height:1.6;}
+.psc-sub{font-size:13px;color:var(--subtext);margin-bottom:20px;line-height:1.6;}
+.psc-benefits{list-style:none;text-align:left;margin-bottom:24px;display:flex;flex-direction:column;gap:10px;}
+.psc-benefits li{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text);font-weight:700;line-height:1.4;}
+.psc-benefits li span.psc-icon{font-size:18px;flex-shrink:0;margin-top:-1px;}
+.psc-benefits li span.psc-desc{color:var(--subtext);font-weight:600;}
 
 /* ── SIGN-OUT BUTTON ── */
 .signout-btn{
@@ -1357,7 +1365,7 @@ function openDetail(id) {
   const scroll = document.getElementById('d-scroll');
   scroll.innerHTML = `
     <div class="d-name">${r.name}</div>
-    <div class="d-rating-row">
+    <div class="d-rating-row" onclick="document.getElementById('reviews-section').scrollIntoView({behavior:'smooth'})">
       <div class="d-stars">★ ${r.rating.toFixed(1)}</div>
       <div class="d-rcount">${(r.reviewCount + userRevs.length).toLocaleString()} reviews</div>
       <div class="d-badges">
@@ -1396,8 +1404,28 @@ function openDetail(id) {
 
     <div class="d-divider"></div>
 
-    <div class="d-section">
+    <div class="d-section" id="reviews-section">
       <div class="d-section-title"><i class="fa-solid fa-star"></i> Reviews</div>
+
+      <div class="review-form" id="review-form">
+        <div class="rf-title">✍️ Write a Review</div>
+        ${currentUser ? `
+          <div class="star-input" id="star-input">
+            ${[1,2,3,4,5].map(n => `<span class="si-star" data-val="${n}" onclick="setReviewStar(${n})">★</span>`).join('')}
+          </div>
+          <textarea class="rv-textarea" id="rv-textarea" placeholder="Share your frank experience…" rows="3"></textarea>
+          <button class="rv-submit" onclick="submitReview(${r.id})">Submit Review 🌭</button>
+        ` : `
+          <div class="rv-signin-prompt">
+            <p>Sign in to post a review and share your frank experience with the community.</p>
+            <button class="google-btn" onclick="signInWithGoogle()">
+              ${GOOGLE_G_SVG}
+              Sign in with Google
+            </button>
+          </div>
+        `}
+      </div>
+
       ${allRevs.length === 0 ? '<div class="no-reviews">No reviews yet. Be the first!</div>' :
         allRevs.map(rv => `
           <div class="review-item">
@@ -1413,15 +1441,6 @@ function openDetail(id) {
           </div>
         `).join('')
       }
-
-      <div class="review-form" id="review-form">
-        <div class="rf-title">✍️ Write a Review</div>
-        <div class="star-input" id="star-input">
-          ${[1,2,3,4,5].map(n => `<span class="si-star" data-val="${n}" onclick="setReviewStar(${n})">★</span>`).join('')}
-        </div>
-        <textarea class="rv-textarea" id="rv-textarea" placeholder="Share your frank experience…" rows="3"></textarea>
-        <button class="rv-submit" onclick="submitReview(${r.id})">Submit Review 🌭</button>
-      </div>
     </div>
   `;
 
@@ -1563,7 +1582,21 @@ function renderProfile() {
       <div class="profile-signin-card">
         <div class="psc-logo">🌭</div>
         <div class="psc-title">Join Frank Finder</div>
-        <div class="psc-sub">Sign in to save your reviews,<br>track visits, and earn badges.</div>
+        <div class="psc-sub">Create a free account to unlock the full Frank Finder experience.</div>
+        <ul class="psc-benefits">
+          <li>
+            <span class="psc-icon">✍️</span>
+            <div><strong>Post reviews</strong><br><span class="psc-desc">Share your frank opinions and help others find the best dogs in NJ.</span></div>
+          </li>
+          <li>
+            <span class="psc-icon">🏆</span>
+            <div><strong>Level up</strong><br><span class="psc-desc">Earn ranks from Frankfurter Fan all the way to Frank Legend as you review more spots.</span></div>
+          </li>
+          <li>
+            <span class="psc-icon">👤</span>
+            <div><strong>Your profile</strong><br><span class="psc-desc">Track your visits, stats, and full review history in one place.</span></div>
+          </li>
+        </ul>
         <button class="google-btn" onclick="signInWithGoogle()">
           ${GOOGLE_G_SVG}
           Continue with Google
