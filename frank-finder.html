@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Frank Finder 🌭</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #D4920A;          /* deli mustard yellow — ratings, nav, levels */
+  --primary-dim: rgba(212,146,10,0.14);
+  --accent: #B71C2A;           /* ketchup red — action buttons, CTAs, events */
+  --accent-dim: rgba(183,28,42,0.12);
+  --green: #2E7D32;            /* relish green — daily deals, success, fresh */
+  --green-dim: rgba(46,125,50,0.13);
+  --bg: #F8EDD4;
+  --surface: #FFFFFF;
+  --surface2: #FFF8EE;
+  --surface3: #FFF3E2;
+  --text: #2C1810;
+  --subtext: #8B6040;
+  --border: #E8D5B0;
+  --star: #D4920A;             /* mustard for stars */
+  --blue: #1565C0;
+  --radius: 14px;
+  --nav-height: 70px;
+  --tr: 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background:linear-gradient(160deg,#FFF8E7 0%,#FDE8C0 55%,#F5D49A 100%) fixed;background-attachment:fixed;color:var(--text);}
+
+/* ── APP SHELL ── */
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh;overflow:hidden;position:relative;background:transparent;}
+.page{display:none;flex:1;overflow:hidden;flex-direction:column;}
+.page.active{display:flex;}
+
+/* ── BOTTOM NAV ── */
+#bottom-nav{
+  display:flex;background:var(--surface);border-top:2px solid var(--border);
+  height:var(--nav-height);flex-shrink:0;z-index:200;
+  box-shadow:0 -2px 16px rgba(44,24,16,0.08);
+}
+.nav-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;background:none;border:none;color:var(--subtext);cursor:pointer;
+  font-family:'Nunito',sans-serif;font-size:10px;font-weight:800;letter-spacing:0.8px;
+  text-transform:uppercase;transition:color var(--tr);padding-bottom:6px;
+}
+.nav-btn i{font-size:20px;transition:transform var(--tr), color var(--tr);}
+.nav-btn.active{color:var(--primary);}
+.nav-btn.active i{transform:translateY(-2px);}
+.nav-dot{width:4px;height:4px;border-radius:50%;background:var(--primary);opacity:0;transition:opacity var(--tr);margin-top:-2px;}
+.nav-btn.active .nav-dot{opacity:1;}
+
+/* ── PAGE HEADERS ── */
+.page-header{
+  display:flex;align-items:center;padding:14px 16px 12px;
+  background:var(--surface);border-bottom:2px solid var(--border);
+  flex-shrink:0;gap:10px;box-shadow:0 2px 8px rgba(44,24,16,0.07);
+}
+.page-title{font-size:20px;font-weight:900;flex:1;}
+.page-title .accent{color:var(--primary);}
+
+/* ── VIEW TOGGLE ── */
+.view-toggle{display:flex;background:var(--surface3);border-radius:10px;padding:3px;gap:2px;}
+.toggle-btn{
+  padding:5px 13px;border-radius:8px;border:none;background:none;
+  color:var(--subtext);font-family:'Nunito',sans-serif;font-size:12px;
+  font-weight:800;cursor:pointer;transition:all var(--tr);display:flex;align-items:center;gap:5px;
+}
+.toggle-btn.active{background:var(--primary);color:#000;}
+.toggle-btn i{font-size:11px;}
+
+/* ── FILTER BUTTON ── */
+.filter-btn{
+  width:38px;height:38px;border-radius:10px;border:1px solid var(--border);
+  background:var(--surface3);color:var(--subtext);display:flex;align-items:center;
+  justify-content:center;cursor:pointer;font-size:14px;transition:all var(--tr);flex-shrink:0;
+}
+.filter-btn.active{background:var(--primary-dim);border-color:var(--primary);color:var(--primary);}
+
+/* ── MAP ── */
+#map-container{flex:1;position:relative;overflow:hidden;}
+#map{width:100%;height:100%;}
+
+.map-marker-outer{cursor:pointer;}
+.map-bubble{
+  background:var(--surface);border:2px solid var(--primary);border-radius:10px;
+  padding:4px 8px;display:inline-flex;align-items:center;gap:5px;
+  box-shadow:0 4px 16px rgba(44,24,16,0.22);white-space:nowrap;transition:transform 0.15s;
+}
+.map-bubble:hover{transform:scale(1.08);}
+.map-bubble .mn{font-size:11px;font-weight:800;color:var(--text);max-width:80px;overflow:hidden;text-overflow:ellipsis;}
+.map-bubble .mr{font-size:11px;font-weight:700;color:var(--star);}
+.map-pin-tri{
+  width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;
+  border-top:8px solid var(--primary);margin:0 auto;
+}
+.map-marker-outer.sel .map-bubble{border-color:var(--accent);background:rgba(224,48,48,0.15);}
+.map-marker-outer.sel .map-pin-tri{border-top-color:var(--accent);}
+.user-pin{width:16px;height:16px;background:#4285F4;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,0.5);}
+.user-pulse{width:40px;height:40px;background:rgba(66,133,244,0.2);border-radius:50%;animation:pulse 2s ease-out infinite;}
+@keyframes pulse{0%{transform:scale(0.5);opacity:1;}100%{transform:scale(1.5);opacity:0;}}
+
+.map-info-bar{
+  position:absolute;top:12px;left:12px;right:12px;z-index:10;
+  background:rgba(255,248,238,0.96);border:1px solid var(--border);border-radius:var(--radius);
+  padding:10px 14px;display:flex;align-items:center;gap:10px;
+  box-shadow:0 4px 20px rgba(44,24,16,0.18);backdrop-filter:blur(8px);
+}
+.map-info-bar i{color:var(--subtext);font-size:13px;}
+.map-info-bar .mib-text{color:var(--subtext);font-size:13px;font-weight:600;flex:1;}
+.map-count{background:var(--primary);color:#000;font-size:11px;font-weight:900;padding:2px 9px;border-radius:20px;}
+
+/* ── LIST VIEW ── */
+#list-view{flex:1;overflow-y:auto;display:none;flex-direction:column;}
+#list-view.visible{display:flex;}
+.sort-bar{
+  display:flex;align-items:center;gap:8px;padding:10px 12px 6px;
+  border-bottom:1px solid var(--border);flex-shrink:0;
+}
+.sort-label{font-size:11px;color:var(--subtext);font-weight:800;text-transform:uppercase;letter-spacing:0.5px;}
+.sort-select{
+  background:var(--surface2);border:1px solid var(--border);color:var(--text);
+  font-family:'Nunito',sans-serif;font-size:13px;font-weight:700;
+  border-radius:8px;padding:5px 10px;cursor:pointer;flex:1;
+}
+.list-inner{padding:10px;display:flex;flex-direction:column;gap:10px;}
+
+.restaurant-card{
+  background:var(--surface);border-radius:var(--radius);overflow:hidden;
+  display:flex;cursor:pointer;border:1px solid var(--border);
+  transition:all var(--tr);flex-shrink:0;
+}
+.restaurant-card:active{border-color:var(--primary);transform:scale(0.99);}
+.card-img{
+  width:100px;height:100px;flex-shrink:0;display:flex;align-items:center;
+  justify-content:center;font-size:42px;
+}
+.card-body{flex:1;padding:12px 12px 12px 4px;display:flex;flex-direction:column;justify-content:space-between;min-width:0;}
+.card-name{font-size:14px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card-meta{display:flex;align-items:center;gap:6px;margin-top:3px;}
+.card-rating{display:flex;align-items:center;gap:3px;font-size:13px;font-weight:700;color:var(--star);}
+.card-rcount{font-size:11px;color:var(--subtext);}
+.card-dist{font-size:11px;color:var(--subtext);margin-left:auto;}
+.card-specialty{
+  background:var(--primary-dim);border:1px solid rgba(240,165,0,0.25);color:var(--primary);
+  font-size:10px;font-weight:800;border-radius:6px;padding:2px 7px;
+  align-self:flex-start;margin-top:5px;
+}
+.card-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;}
+.ctag{font-size:10px;font-weight:700;background:var(--surface3);color:var(--subtext);border-radius:4px;padding:2px 6px;}
+
+/* ── FILTER PANEL ── */
+#filter-overlay{position:fixed;inset:0;background:rgba(44,24,16,0.45);z-index:500;opacity:0;pointer-events:none;transition:opacity var(--tr);}
+#filter-overlay.open{opacity:1;pointer-events:all;}
+#filter-panel{
+  position:fixed;bottom:var(--nav-height);left:0;right:0;z-index:501;
+  background:var(--surface);border-radius:20px 20px 0 0;padding:0 20px 24px;
+  transform:translateY(110%);transition:transform var(--tr);
+  max-height:78vh;overflow-y:auto;
+}
+#filter-panel.open{transform:translateY(0);}
+.fp-handle{width:40px;height:4px;background:var(--border);border-radius:2px;margin:16px auto 20px;}
+.fp-title{font-size:18px;font-weight:900;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;}
+.fp-clear{font-size:13px;font-weight:800;color:var(--accent);background:none;border:none;cursor:pointer;font-family:'Nunito',sans-serif;}
+.fp-section{margin-bottom:22px;}
+.fp-section-label{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:var(--subtext);margin-bottom:10px;}
+.radius-row{display:flex;align-items:center;gap:10px;}
+.radius-slider{flex:1;accent-color:var(--primary);cursor:pointer;height:4px;}
+.radius-val{font-size:14px;font-weight:900;color:var(--primary);min-width:40px;text-align:right;}
+.rating-chips{display:flex;gap:8px;flex-wrap:wrap;}
+.rchip{
+  padding:6px 13px;border-radius:20px;border:1px solid var(--border);
+  background:var(--surface2);color:var(--subtext);font-family:'Nunito',sans-serif;
+  font-size:13px;font-weight:700;cursor:pointer;transition:all var(--tr);
+}
+.rchip.active{background:var(--primary);border-color:var(--primary);color:#000;}
+.checkbox-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.cb-item{display:flex;align-items:center;gap:8px;cursor:pointer;padding:4px 0;}
+.cb-item input{accent-color:var(--primary);width:16px;height:16px;cursor:pointer;}
+.cb-item label{font-size:13px;font-weight:600;color:var(--text);cursor:pointer;}
+.fp-apply{
+  width:100%;padding:14px;background:var(--accent);color:#fff;border:none;
+  border-radius:12px;font-family:'Nunito',sans-serif;font-size:16px;font-weight:900;
+  cursor:pointer;margin-top:4px;
+}
+
+/* ── RESTAURANT DETAIL ── */
+#detail-overlay{
+  position:fixed;inset:0;z-index:600;
+  background:linear-gradient(180deg,#FFF8E7 0%,#FDF0D9 100%);
+  transform:translateX(100%);transition:transform var(--tr);
+  display:flex;flex-direction:column;overflow:hidden;
+}
+#detail-overlay.open{transform:translateX(0);}
+.d-back{
+  position:absolute;top:14px;left:14px;z-index:10;width:38px;height:38px;
+  border-radius:50%;background:rgba(44,24,16,0.65);display:flex;align-items:center;
+  justify-content:center;border:none;color:#fff;font-size:16px;cursor:pointer;
+  backdrop-filter:blur(8px);
+}
+.d-img-wrap{height:230px;flex-shrink:0;position:relative;overflow:hidden;background:var(--surface2);}
+.d-img-wrap img{width:100%;height:100%;object-fit:cover;}
+.d-img-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:90px;}
+.d-img-dots{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;gap:6px;}
+.d-img-dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.4);cursor:pointer;transition:background 0.2s;}
+.d-img-dot.active{background:#fff;}
+.d-scroll{flex:1;overflow-y:auto;padding:20px;}
+.d-name{font-size:24px;font-weight:900;margin-bottom:8px;}
+.d-rating-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.d-stars{color:var(--star);font-size:16px;font-weight:900;}
+.d-rcount{color:var(--subtext);font-size:13px;}
+.d-badges{display:flex;gap:6px;flex-wrap:wrap;}
+.dbadge{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;border:1px solid;}
+.dbadge-style{background:var(--primary-dim);border-color:rgba(240,165,0,0.3);color:var(--primary);}
+.dbadge-brand{background:rgba(100,180,255,0.1);border-color:rgba(100,180,255,0.3);color:var(--blue);}
+.d-section{margin-top:22px;}
+.d-section-title{font-size:16px;font-weight:900;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.d-section-title i{color:var(--primary);}
+.d-desc{font-size:14px;line-height:1.75;color:var(--subtext);}
+.d-divider{height:1px;background:var(--border);margin:22px 0;}
+
+/* Menu items */
+.menu-item{background:var(--surface);border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid var(--border);}
+.mi-header{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:3px;}
+.mi-name{font-size:14px;font-weight:800;flex:1;}
+.mi-price{font-size:14px;font-weight:700;color:var(--primary);white-space:nowrap;}
+.mi-rating{font-size:12px;color:var(--star);margin-bottom:4px;}
+.mi-desc{font-size:12px;color:var(--subtext);line-height:1.5;}
+
+/* Reviews */
+.review-item{background:var(--surface);border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid var(--border);}
+.rv-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+.rv-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:#000;flex-shrink:0;}
+.rv-meta{flex:1;}
+.rv-user{font-size:14px;font-weight:800;}
+.rv-date{font-size:11px;color:var(--subtext);}
+.rv-stars{color:var(--star);font-size:12px;margin-bottom:4px;}
+.rv-text{font-size:13px;color:var(--subtext);line-height:1.6;}
+
+/* Review form */
+.review-form{background:var(--surface2);border-radius:12px;padding:16px;margin-top:12px;border:1px solid var(--border);}
+.rf-title{font-size:15px;font-weight:900;margin-bottom:12px;}
+.star-input{display:flex;gap:8px;margin-bottom:12px;}
+.si-star{font-size:30px;cursor:pointer;color:var(--border);transition:color 0.15s,transform 0.15s;user-select:none;}
+.si-star.lit{color:var(--star);}
+.si-star:hover{color:var(--star);transform:scale(1.15);}
+.rv-textarea{
+  width:100%;background:var(--surface3);border:1px solid var(--border);
+  border-radius:10px;padding:12px;color:var(--text);font-family:'Nunito',sans-serif;
+  font-size:14px;resize:none;height:88px;margin-bottom:12px;outline:none;line-height:1.5;
+}
+.rv-textarea::placeholder{color:var(--subtext);}
+.rv-textarea:focus{border-color:var(--primary);}
+.rv-submit{
+  width:100%;padding:12px;background:var(--accent);color:#fff;border:none;
+  border-radius:10px;font-family:'Nunito',sans-serif;font-size:15px;font-weight:900;cursor:pointer;
+}
+.no-reviews{text-align:center;color:var(--subtext);font-size:14px;padding:20px 0;}
+
+/* ── SPECIALS PAGE ── */
+#specials-page{overflow:hidden;}
+.specials-tab-bar{
+  display:flex;background:var(--surface);border-bottom:2px solid var(--border);
+  flex-shrink:0;box-shadow:0 2px 6px rgba(44,24,16,0.06);
+}
+.spec-tab{
+  flex:1;padding:13px 6px;border:none;background:none;
+  font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;
+  color:var(--subtext);cursor:pointer;border-bottom:3px solid transparent;
+  margin-bottom:-2px;transition:all var(--tr);display:flex;align-items:center;
+  justify-content:center;gap:5px;letter-spacing:0.2px;
+}
+.spec-tab:hover{color:var(--text);background:var(--surface3);}
+.spec-tab.active{color:var(--text);}
+#spec-tab-daily.active{border-bottom-color:var(--green);}
+#spec-tab-event.active{border-bottom-color:var(--accent);}
+#spec-tab-holiday.active{border-bottom-color:var(--primary);}
+.spec-tab-pill{
+  font-size:10px;font-weight:900;padding:1px 6px;border-radius:20px;
+  background:var(--surface3);color:var(--subtext);transition:all var(--tr);
+}
+#spec-tab-daily.active .spec-tab-pill{background:var(--green-dim);color:var(--green);}
+#spec-tab-event.active .spec-tab-pill{background:var(--accent-dim);color:var(--accent);}
+#spec-tab-holiday.active .spec-tab-pill{background:var(--primary-dim);color:var(--primary);}
+.specials-content{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:12px;}
+.specials-section-hdr{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.2px;color:var(--subtext);padding:8px 4px 4px;}
+.special-card{
+  background:var(--surface);border-radius:var(--radius);overflow:hidden;
+  border:1px solid var(--border);cursor:pointer;transition:all var(--tr);
+}
+.special-card:active{border-color:var(--accent);transform:scale(0.99);}
+.sc-header{padding:14px 16px;display:flex;gap:14px;align-items:flex-start;}
+.sc-emoji{font-size:36px;flex-shrink:0;line-height:1;}
+.sc-info{flex:1;}
+.sc-restaurant{font-size:11px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:2px;}
+.sc-title{font-size:16px;font-weight:900;margin-bottom:4px;}
+.sc-desc{font-size:13px;color:var(--subtext);line-height:1.5;}
+.sc-footer{padding:9px 16px;background:var(--surface2);display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);}
+.sc-type{font-size:10px;font-weight:800;padding:3px 10px;border-radius:20px;letter-spacing:0.3px;}
+.sct-daily{background:var(--green-dim);color:var(--green);}
+.sct-event{background:var(--accent-dim);color:var(--accent);}
+.sct-holiday{background:var(--primary-dim);color:var(--primary);}
+.sc-expires{font-size:11px;color:var(--subtext);}
+
+/* ── ACCOUNT PAGE ── */
+#account-page{overflow-y:auto;}
+.account-content{padding-bottom:28px;}
+.profile-hero{
+  background:linear-gradient(160deg,var(--surface2) 0%,var(--surface) 100%);
+  padding:24px 20px 20px;border-bottom:1px solid var(--border);
+}
+.ph-top{display:flex;gap:18px;align-items:center;margin-bottom:18px;}
+.ph-avatar-wrap{position:relative;flex-shrink:0;}
+.ph-avatar{
+  width:78px;height:78px;border-radius:50%;display:flex;align-items:center;
+  justify-content:center;font-size:30px;font-weight:900;color:#000;
+  border:3px solid var(--primary);overflow:hidden;cursor:pointer;
+}
+.ph-avatar img{width:100%;height:100%;object-fit:cover;}
+.ph-avatar-edit{
+  position:absolute;bottom:0;right:0;width:24px;height:24px;background:var(--primary);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;
+  border:2px solid var(--bg);
+}
+.ph-avatar-edit i{font-size:10px;color:#000;}
+.ph-info{flex:1;}
+.ph-nickname{font-size:22px;font-weight:900;display:flex;align-items:center;gap:8px;}
+.ph-edit-nick{background:none;border:none;color:var(--subtext);font-size:14px;cursor:pointer;padding:2px 4px;}
+.ph-level-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:var(--primary-dim);border:1px solid rgba(240,165,0,0.35);
+  border-radius:20px;padding:4px 12px;margin-top:6px;
+}
+.plb-emoji{font-size:15px;}
+.plb-name{font-size:12px;font-weight:800;color:var(--primary);}
+.ph-stats{display:flex;gap:0;}
+.ph-stat{flex:1;text-align:center;padding:12px 0;border-right:1px solid var(--border);}
+.ph-stat:last-child{border-right:none;}
+.ps-val{font-size:20px;font-weight:900;color:var(--primary);}
+.ps-label{font-size:9px;font-weight:800;text-transform:uppercase;color:var(--subtext);letter-spacing:0.5px;margin-top:2px;}
+
+.ac-body{padding:16px 16px 0;}
+.level-progress-card{background:var(--surface);border-radius:var(--radius);padding:16px;margin-bottom:16px;border:1px solid var(--border);}
+.lpc-header{display:flex;justify-content:space-between;margin-bottom:8px;align-items:center;}
+.lpc-title{font-size:14px;font-weight:800;}
+.lpc-next{font-size:12px;color:var(--subtext);}
+.prog-bar{height:7px;background:var(--surface3);border-radius:4px;overflow:hidden;margin-bottom:6px;}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:4px;transition:width 0.7s ease;}
+.lpc-desc{font-size:12px;color:var(--subtext);}
+
+.ac-section{margin-bottom:20px;}
+.ac-section-title{font-size:18px;font-weight:900;margin-bottom:12px;}
+.my-rev-card{background:var(--surface);border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid var(--border);}
+.mrc-restaurant{font-size:11px;font-weight:800;color:var(--primary);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:3px;}
+.mrc-stars{color:var(--star);font-size:13px;margin-bottom:5px;}
+.mrc-text{font-size:13px;color:var(--subtext);line-height:1.5;}
+.mrc-date{font-size:10px;color:var(--border);margin-top:6px;}
+.empty-revs{text-align:center;color:var(--subtext);padding:32px 0;}
+.empty-revs i{font-size:42px;color:var(--border);display:block;margin-bottom:12px;}
+.empty-revs p{font-size:14px;font-weight:600;}
+
+/* Nickname modal */
+#nick-modal{position:fixed;inset:0;z-index:700;display:none;align-items:flex-end;}
+#nick-modal.open{display:flex;}
+.nm-backdrop{position:absolute;inset:0;background:rgba(44,24,16,0.45);}
+.nm-panel{
+  position:relative;width:100%;background:var(--surface);
+  border-radius:20px 20px 0 0;padding:24px 20px 36px;z-index:1;
+}
+.nm-title{font-size:18px;font-weight:900;margin-bottom:14px;}
+.nm-input{
+  width:100%;background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:12px 16px;color:var(--text);
+  font-family:'Nunito',sans-serif;font-size:16px;outline:none;margin-bottom:14px;
+}
+.nm-input:focus{border-color:var(--primary);}
+.nm-save{width:100%;padding:14px;background:var(--accent);color:#fff;border:none;border-radius:12px;font-family:'Nunito',sans-serif;font-size:16px;font-weight:900;cursor:pointer;}
+
+/* Loading screen */
+#loading-screen{
+  position:fixed;inset:0;z-index:1000;
+  background:linear-gradient(160deg,#FFF8E7 0%,#FDE8C0 55%,#F5D49A 100%);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;
+  transition:opacity 0.5s ease;
+}
+#loading-screen.hide{opacity:0;pointer-events:none;}
+.ls-logo{font-size:72px;animation:hotdog-bounce 0.9s ease-in-out infinite alternate;}
+@keyframes hotdog-bounce{from{transform:rotate(-8deg) translateY(0);}to{transform:rotate(8deg) translateY(-14px);}}
+.ls-title{font-size:30px;font-weight:900;letter-spacing:-0.5px;color:var(--text);}
+.ls-title .ac{color:var(--accent);}
+.ls-sub{color:var(--subtext);}
+.ls-sub{font-size:14px;color:var(--subtext);}
+.ls-dots{display:flex;gap:8px;}
+.ls-dot{width:8px;height:8px;border-radius:50%;background:var(--primary);animation:ldot 1.2s ease-in-out infinite;}
+.ls-dot:nth-child(2){animation-delay:0.2s;}
+.ls-dot:nth-child(3){animation-delay:0.4s;}
+@keyframes ldot{0%,80%,100%{transform:scale(0.7);opacity:0.4;}40%{transform:scale(1.1);opacity:1;}}
+
+/* Toast */
+#toast{
+  position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-80px);
+  background:var(--surface);border:1px solid var(--border);border-radius:30px;
+  padding:10px 20px;font-size:14px;font-weight:700;z-index:900;
+  transition:transform 0.3s ease;box-shadow:0 4px 20px rgba(44,24,16,0.2);
+  white-space:nowrap;pointer-events:none;
+}
+#toast.show{transform:translateX(-50%) translateY(0);}
+#toast i{margin-right:7px;color:var(--primary);}
+
+/* Leaflet light overrides */
+.leaflet-container{background:#F5ECD7!important;}
+.leaflet-control-zoom{border:1px solid var(--border)!important;}
+.leaflet-control-zoom a{background:var(--surface)!important;color:var(--text)!important;border-color:var(--border)!important;}
+.leaflet-bar{box-shadow:0 2px 12px rgba(44,24,16,0.15)!important;}
+.leaflet-popup-content-wrapper{background:var(--surface)!important;color:var(--text)!important;border:1px solid var(--border)!important;}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+
+/* Utility */
+.flex-center{display:flex;align-items:center;justify-content:center;}
+.hidden{display:none!important;}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════════════
+     LOADING SCREEN
+══════════════════════════════════════════════ -->
+<div id="loading-screen">
+  <div class="ls-logo">🌭</div>
+  <div class="ls-title">Frank <span class="ac">Finder</span></div>
+  <div class="ls-sub">Finding the best dogs near you…</div>
+  <div class="ls-dots">
+    <div class="ls-dot"></div>
+    <div class="ls-dot"></div>
+    <div class="ls-dot"></div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     MAIN APP
+══════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- ── LOCATOR PAGE ── -->
+  <div id="locator-page" class="page active">
+    <div class="page-header">
+      <span style="font-size:24px;">🌭</span>
+      <div class="page-title">Frank <span class="accent">Finder</span></div>
+      <div class="view-toggle">
+        <button class="toggle-btn active" id="map-toggle" onclick="setView('map')">
+          <i class="fa-solid fa-map"></i> Map
+        </button>
+        <button class="toggle-btn" id="list-toggle" onclick="setView('list')">
+          <i class="fa-solid fa-list"></i> List
+        </button>
+      </div>
+      <button class="filter-btn" id="filter-btn" onclick="openFilters()" title="Filters">
+        <i class="fa-solid fa-sliders"></i>
+      </button>
+    </div>
+
+    <!-- Map View -->
+    <div id="map-container">
+      <div class="map-info-bar">
+        <i class="fa-solid fa-location-dot"></i>
+        <span class="mib-text" id="map-location-text">Locating you…</span>
+        <span class="map-count" id="map-count">0</span>
+      </div>
+      <div id="map"></div>
+    </div>
+
+    <!-- List View -->
+    <div id="list-view">
+      <div class="sort-bar">
+        <span class="sort-label">Sort:</span>
+        <select class="sort-select" id="sort-select" onchange="renderList()">
+          <option value="distance">Distance</option>
+          <option value="rating">Rating (High→Low)</option>
+          <option value="reviews">Most Reviews</option>
+          <option value="name">Name A–Z</option>
+        </select>
+      </div>
+      <div class="list-inner" id="list-inner"></div>
+    </div>
+  </div>
+
+  <!-- ── SPECIALS PAGE ── -->
+  <div id="specials-page" class="page">
+    <div class="page-header">
+      <span style="font-size:22px;">🔥</span>
+      <div class="page-title">Hot <span class="accent">Specials</span></div>
+    </div>
+    <div class="specials-tab-bar">
+      <button class="spec-tab active" id="spec-tab-daily" onclick="setSpecialsTab('daily')">
+        🗓️ Daily <span class="spec-tab-pill" id="spec-pill-daily"></span>
+      </button>
+      <button class="spec-tab" id="spec-tab-event" onclick="setSpecialsTab('event')">
+        🎉 Events <span class="spec-tab-pill" id="spec-pill-event"></span>
+      </button>
+      <button class="spec-tab" id="spec-tab-holiday" onclick="setSpecialsTab('holiday')">
+        🎊 Holidays <span class="spec-tab-pill" id="spec-pill-holiday"></span>
+      </button>
+    </div>
+    <div class="specials-content" id="specials-content"></div>
+  </div>
+
+  <!-- ── ACCOUNT PAGE ── -->
+  <div id="account-page" class="page">
+    <div class="page-header">
+      <span style="font-size:22px;">👤</span>
+      <div class="page-title">My <span class="accent">Account</span></div>
+    </div>
+    <div class="account-content" id="account-content"></div>
+  </div>
+
+  <!-- ── BOTTOM NAV ── -->
+  <nav id="bottom-nav">
+    <button class="nav-btn active" id="nav-locator" onclick="navTo('locator')">
+      <i class="fa-solid fa-location-dot"></i>
+      Locator
+      <div class="nav-dot"></div>
+    </button>
+    <button class="nav-btn" id="nav-specials" onclick="navTo('specials')">
+      <i class="fa-solid fa-tag"></i>
+      Specials
+      <div class="nav-dot"></div>
+    </button>
+    <button class="nav-btn" id="nav-account" onclick="navTo('account')">
+      <i class="fa-solid fa-user"></i>
+      Account
+      <div class="nav-dot"></div>
+    </button>
+  </nav>
+</div>
+
+<!-- ── FILTER PANEL ── -->
+<div id="filter-overlay" onclick="closeFilters()"></div>
+<div id="filter-panel">
+  <div class="fp-handle"></div>
+  <div class="fp-title">
+    Filters
+    <button class="fp-clear" onclick="clearFilters()">Clear All</button>
+  </div>
+
+  <div class="fp-section">
+    <div class="fp-section-label">Radius</div>
+    <div class="radius-row">
+      <input type="range" class="radius-slider" id="radius-slider" min="1" max="25" value="10" oninput="document.getElementById('radius-val').textContent=this.value+'mi'">
+      <span class="radius-val" id="radius-val">10mi</span>
+    </div>
+  </div>
+
+  <div class="fp-section">
+    <div class="fp-section-label">Minimum Rating</div>
+    <div class="rating-chips">
+      <button class="rchip active" data-min="0" onclick="selectRatingChip(this,0)">Any</button>
+      <button class="rchip" data-min="3" onclick="selectRatingChip(this,3)">★ 3+</button>
+      <button class="rchip" data-min="3.5" onclick="selectRatingChip(this,3.5)">★ 3.5+</button>
+      <button class="rchip" data-min="4" onclick="selectRatingChip(this,4)">★ 4+</button>
+      <button class="rchip" data-min="4.5" onclick="selectRatingChip(this,4.5)">★ 4.5+</button>
+    </div>
+  </div>
+
+  <div class="fp-section">
+    <div class="fp-section-label">Hotdog Style</div>
+    <div class="checkbox-grid">
+      <label class="cb-item"><input type="checkbox" class="style-cb" value="Chili Dog"><label>🌶️ Chili Dog</label></label>
+      <label class="cb-item"><input type="checkbox" class="style-cb" value="Italian Hotdog"><label>🇮🇹 Italian Dog</label></label>
+      <label class="cb-item"><input type="checkbox" class="style-cb" value="Corndog"><label>🌽 Corndog</label></label>
+      <label class="cb-item"><input type="checkbox" class="style-cb" value="Coney Dog"><label>🏙️ Coney Dog</label></label>
+      <label class="cb-item"><input type="checkbox" class="style-cb" value="Sonoran"><label>🌵 Sonoran</label></label>
+    </div>
+  </div>
+
+  <div class="fp-section">
+    <div class="fp-section-label">Brand Offered</div>
+    <div class="checkbox-grid">
+      <label class="cb-item"><input type="checkbox" class="brand-cb" value="Thumann's"><label>Thumann's</label></label>
+      <label class="cb-item"><input type="checkbox" class="brand-cb" value="Sabrett"><label>Sabrett</label></label>
+      <label class="cb-item"><input type="checkbox" class="brand-cb" value="Nathan's"><label>Nathan's</label></label>
+      <label class="cb-item"><input type="checkbox" class="brand-cb" value="Hebrew National"><label>Hebrew Nat'l</label></label>
+      <label class="cb-item"><input type="checkbox" class="brand-cb" value="Ball Park"><label>Ball Park</label></label>
+      <label class="cb-item"><input type="checkbox" class="brand-cb" value="Oscar Mayer"><label>Oscar Mayer</label></label>
+    </div>
+  </div>
+
+  <button class="fp-apply" onclick="applyFilters()">Apply Filters</button>
+</div>
+
+<!-- ── RESTAURANT DETAIL OVERLAY ── -->
+<div id="detail-overlay">
+  <button class="d-back" onclick="closeDetail()"><i class="fa-solid fa-arrow-left"></i></button>
+  <div class="d-img-wrap" id="d-img-wrap">
+    <div class="d-img-placeholder" id="d-img-placeholder"></div>
+    <div class="d-img-dots" id="d-img-dots"></div>
+  </div>
+  <div class="d-scroll" id="d-scroll">
+    <!-- populated by JS -->
+  </div>
+</div>
+
+<!-- ── NICKNAME MODAL ── -->
+<div id="nick-modal">
+  <div class="nm-backdrop" onclick="closeNickModal()"></div>
+  <div class="nm-panel">
+    <div class="nm-title">Edit Nickname</div>
+    <input class="nm-input" id="nm-input" type="text" placeholder="Your hotdog alias…" maxlength="24">
+    <button class="nm-save" onclick="saveNickname()">Save</button>
+  </div>
+</div>
+
+<!-- ── AVATAR FILE INPUT (hidden) ── -->
+<input type="file" id="avatar-file-input" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)">
+
+<!-- ── TOAST ── -->
+<div id="toast"></div>
+
+<!-- ══════════════════════════════════════════════
+     SCRIPTS
+══════════════════════════════════════════════ -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+'use strict';
+
+// ═══════════════════════════════════════════
+//  MOCK DATA
+// ═══════════════════════════════════════════
+
+const AVATAR_COLORS = ['#F0A500','#E03030','#2ECC71','#64B4FF','#C678DD','#56B6C2','#E5C07B'];
+const LEVELS = [
+  { name:'Hot Dog Curious',  emoji:'🌭', min:0,  max:0  },
+  { name:'Mustard Rookie',   emoji:'🥇', min:1,  max:3  },
+  { name:'Relish Ranger',    emoji:'🎯', min:4,  max:7  },
+  { name:'Coney Connoisseur',emoji:'⭐', min:8,  max:15 },
+  { name:'Bun Master',       emoji:'👑', min:16, max:25 },
+  { name:'Frank Fanatic',    emoji:'🔥', min:26, max:50 },
+  { name:'Hot Dog Legend',   emoji:'🏆', min:51, max:Infinity },
+];
+
+const RESTAURANTS = [
+  {
+    id:1, name:"Rutt's Riphouse", lat:40.8584, lng:-74.1579,
+    rating:4.9, reviewCount:1847, emoji:"🔥",
+    bg:"linear-gradient(135deg,#6B0000,#B71C1C)",
+    description:"A Clifton landmark since 1928 — the birthplace of the NJ Ripper. Deep-fried in soybean oil until the skin cracks and curls, the Ripper is unlike any other hot dog in America. Cash only, no excuses. The line forms at 10am.",
+    styles:["Chili Dog","Coney Dog"],
+    brands:["Thumann's","Sabrett"],
+    topSpecialty:"The Ripper",
+    menuItems:[
+      {name:"The Ripper",rating:4.9,price:"$3.75",desc:"A Thumann's frank deep-fried until the skin splits and chars — crispy outside, juicy inside. Served with mustard and relish. Pure NJ."},
+      {name:"The In-Betweener",rating:4.7,price:"$3.50",desc:"Slightly less fried than a Ripper — a gentler char with all the snap. The entry point for newcomers."},
+      {name:"The Cremator",rating:4.5,price:"$3.75",desc:"Fried well past the Ripper stage — extra crispy, almost all charred skin. A cult classic for the brave."},
+    ],
+    reviews:[
+      {user:"RipperRoyalty",rating:5,text:"Best hot dog in New Jersey. Anyone who disagrees has not eaten here.",date:"2026-05-14",ac:"#F0A500"},
+      {user:"NJNative_Lex",rating:5,text:"My family has been coming here since my grandfather was a kid. The Ripper never changes.",date:"2026-05-08",ac:"#E03030"},
+      {user:"NightOwl_Eats",rating:5,text:"Cash only, line around the block on weekends, worth every minute.",date:"2026-04-30",ac:"#2ECC71"},
+    ],
+    hasSpecial:true,
+  },
+  {
+    id:2, name:"Jimmy B's Italian Dogs", lat:40.7876, lng:-74.2552,
+    rating:4.8, reviewCount:1243, emoji:"🇮🇹",
+    bg:"linear-gradient(135deg,#1A3A5C,#2471A3)",
+    description:"The Italian Hot Dog is a New Jersey original and Jimmy B's is the gold standard. A deep-fried frank stuffed into a round of Italian bread hollowed out like a boat, loaded with fried potatoes, peppers, and onions. Nothing like it on Earth.",
+    styles:["Italian Hotdog","Chili Dog"],
+    brands:["Thumann's","Hebrew National"],
+    topSpecialty:"Classic NJ Italian Dog",
+    menuItems:[
+      {name:"Classic NJ Italian Dog",rating:4.9,price:"$7.50",desc:"Deep-fried frank (or two) nestled in hollowed-out Italian bread, loaded with fried potatoes, green peppers, and sweet onions. Add ketchup and mustard to taste."},
+      {name:"Double Italian",rating:4.8,price:"$10.00",desc:"Two franks, double the potatoes, peppers, and onions piled into one roll. The NJ family meal."},
+      {name:"Italian Chili Dog",rating:4.5,price:"$8.50",desc:"The Italian Dog base, finished with a ladle of thick beef chili and shredded sharp cheddar."},
+    ],
+    reviews:[
+      {user:"PepperAndPotato",rating:5,text:"If you don't know about the NJ Italian Dog you are missing one of America's great foods.",date:"2026-05-12",ac:"#2471A3"},
+      {user:"WestOrange_Willie",rating:5,text:"Jimmy B's been doing this since before I was born. Unchanged and perfect.",date:"2026-05-03",ac:"#F0A500"},
+      {user:"CarboLoadKing",rating:4,text:"The Double Italian is a commitment. I commit every time.",date:"2026-04-26",ac:"#E03030"},
+    ],
+    hasSpecial:true,
+  },
+  {
+    id:3, name:"The Windmill", lat:40.3470, lng:-74.0745,
+    rating:4.5, reviewCount:987, emoji:"🌀",
+    bg:"linear-gradient(135deg,#7B3F00,#D4681E)",
+    description:"A Shore institution since 1964. The Windmill has been spinning out legendary franks to generations of Jersey Shore families. Their perfectly grilled all-beef dogs and foot-long Coney are the taste of summer in New Jersey.",
+    styles:["Chili Dog","Coney Dog"],
+    brands:["Sabrett","Ball Park"],
+    topSpecialty:"Shore Foot-Long Coney",
+    menuItems:[
+      {name:"Shore Foot-Long Coney",rating:4.7,price:"$7.00",desc:"A foot-long Sabrett frank on a club roll, smothered in savory beef chili, yellow mustard, and raw white onion. Pure Shore classic."},
+      {name:"Windmill Original Dog",rating:4.5,price:"$4.50",desc:"Perfectly grilled all-beef frank on a steamed bun with your choice of toppings from the old-school condiment bar."},
+      {name:"Jersey Shore Chili Dog",rating:4.4,price:"$6.00",desc:"All-beef frank with the Windmill's famous house chili — a recipe unchanged since 1964."},
+    ],
+    reviews:[
+      {user:"ShoreLifeFoodie",rating:5,text:"Growing up in NJ, the Windmill IS summer. That foot-long Coney hits different after the beach.",date:"2026-05-16",ac:"#D4681E"},
+      {user:"RedBankRaider",rating:4,text:"A little pricier than a roadside stand but the quality and history make it worth it.",date:"2026-05-05",ac:"#2ECC71"},
+    ],
+    hasSpecial:true,
+  },
+  {
+    id:4, name:"Hiram's Roadstand", lat:40.8509, lng:-73.9709,
+    rating:4.7, reviewCount:876, emoji:"🛣️",
+    bg:"linear-gradient(135deg,#2C3E50,#4A6070)",
+    description:"Fort Lee's legendary roadside stand since 1932. Hiram's is famous for the Texas Wiener — a NJ twist on the chili dog smothered in a spiced Coney-style sauce — and their shatteringly crispy deep-fried dogs. The George Washington Bridge was built nearby. The hot dogs are older.",
+    styles:["Chili Dog","Italian Hotdog"],
+    brands:["Nathan's","Thumann's"],
+    topSpecialty:"Hiram's Texas Wiener",
+    menuItems:[
+      {name:"Hiram's Texas Wiener",rating:4.8,price:"$5.50",desc:"Deep-fried frank drenched in a spiced beefy chili sauce — the original NJ Texas Wiener. Mustard and raw onion on top."},
+      {name:"Hiram's Deep-Fried Dog",rating:4.6,price:"$4.25",desc:"Old-school deep-fried frank, crispy casing, served plain or with mustard and relish on a soft bun."},
+      {name:"Fort Lee Italian",rating:4.5,price:"$8.00",desc:"The Italian dog Hiram's style — fried frank, fried potatoes, roasted peppers, in a split Italian roll with giardiniera."},
+    ],
+    reviews:[
+      {user:"FortLeeForever",rating:5,text:"Hiram's has been here forever and I hope it stays forever. Texas Wiener is the standard.",date:"2026-05-09",ac:"#4A6070"},
+      {user:"GWBridgeWalker",rating:5,text:"Walk the bridge, grab a Hiram's Texas Wiener. Best commute reward in America.",date:"2026-04-28",ac:"#F0A500"},
+      {user:"OldRoadside",rating:4,text:"Nothing fancy. Plastic trays, paper napkins, perfect food.",date:"2026-04-17",ac:"#56B6C2"},
+    ],
+    hasSpecial:false,
+  },
+  {
+    id:5, name:"Max's Frankfurters", lat:40.3044, lng:-74.0035,
+    rating:4.8, reviewCount:654, emoji:"⭐",
+    bg:"linear-gradient(135deg,#00416A,#0078A8)",
+    description:"Long Branch's crown jewel since 1928. Max's is the place Springsteen probably grabbed a dog before he was famous. Their all-beef Sabrett franks are grilled on a flat-top to perfection, and the chili is cooked low and slow every morning.",
+    styles:["Coney Dog","Chili Dog"],
+    brands:["Nathan's","Sabrett"],
+    topSpecialty:"Max's Jersey Shore Dog",
+    menuItems:[
+      {name:"Max's Jersey Shore Dog",rating:4.8,price:"$5.00",desc:"All-beef frank grilled flat-top until caramelized, with yellow mustard, onions, and Max's house relish on a soft potato bun."},
+      {name:"Long Branch Chili Dog",rating:4.7,price:"$6.50",desc:"The flat-top frank loaded with Max's slow-cooked beef chili, sharp cheddar, and a drizzle of hot sauce."},
+      {name:"The Shore Combo",rating:4.6,price:"$11.00",desc:"Two Max's dogs plus crinkle fries and a fountain soda — the classic Long Branch lunch."},
+    ],
+    reviews:[
+      {user:"BosstonFan",rating:5,text:"This is the soul of the Jersey Shore. Max's doesn't change and thank God for that.",date:"2026-05-10",ac:"#0078A8"},
+      {user:"LongBranchLifer",rating:5,text:"My grandmother brought me here as a kid. I bring my kids now. Full circle.",date:"2026-05-02",ac:"#F0A500"},
+      {user:"ShoreHouseDave",rating:4,text:"Legitimately one of the best flat-top dogs I've ever had. Simple, perfect.",date:"2026-04-24",ac:"#2ECC71"},
+    ],
+    hasSpecial:true,
+  },
+  {
+    id:6, name:"Callahan's Drive-In", lat:40.9987, lng:-73.9598,
+    rating:4.4, reviewCount:543, emoji:"🚗",
+    bg:"linear-gradient(135deg,#1A4D2E,#2E8B57)",
+    description:"A Bergen County drive-in institution since 1958. Callahan's still does things the old way — hop out of your car, order at the window, eat in the lot. Their California Dog with ketchup, mustard, relish, and sauerkraut is a NJ roadside classic.",
+    styles:["Chili Dog","Coney Dog"],
+    brands:["Thumann's","Oscar Mayer"],
+    topSpecialty:"Callahan's California Dog",
+    menuItems:[
+      {name:"Callahan's California Dog",rating:4.6,price:"$4.75",desc:"All-beef frank with ketchup, mustard, relish, and sauerkraut on a soft bun — the North Jersey drive-in classic."},
+      {name:"Bergen County Chili Dog",rating:4.4,price:"$5.75",desc:"Grilled frank with Callahan's thick beef chili sauce, yellow mustard, and minced white onion."},
+      {name:"The Drive-In Double",rating:4.5,price:"$8.50",desc:"Two Callahan's California Dogs and a side of curly fries — the reason you drove all the way out here."},
+    ],
+    reviews:[
+      {user:"NorwoodNostalgia",rating:5,text:"My dad drove us here on Friday nights in the 80s. Still the same and I love it.",date:"2026-05-07",ac:"#2E8B57"},
+      {user:"BergenBob",rating:4,text:"The California Dog is underrated as a topping combo. The sauerkraut makes it.",date:"2026-04-30",ac:"#56B6C2"},
+    ],
+    hasSpecial:false,
+  },
+  {
+    id:7, name:"Garden State Grille", lat:40.8259, lng:-74.2090,
+    rating:4.5, reviewCount:378, emoji:"🌿",
+    bg:"linear-gradient(135deg,#2D4739,#3D7A56)",
+    description:"Montclair's elevated take on the NJ hot dog experience. Garden State Grille pairs craft dogs with local beers and gourmet toppings without losing the soul of what makes a Jersey frank great. The truffle Italian Dog is their calling card.",
+    styles:["Italian Hotdog","Chili Dog"],
+    brands:["Thumann's","Hebrew National"],
+    topSpecialty:"Garden State Truffle Dog",
+    menuItems:[
+      {name:"Garden State Truffle Dog",rating:4.8,price:"$10.00",desc:"Hebrew National frank on a brioche bun with truffle aioli, caramelized onions, shaved parmesan, and fresh thyme — NJ meets fine dining."},
+      {name:"Elevated Italian Dog",rating:4.6,price:"$9.50",desc:"The NJ Italian Dog made gourmet: fried frank, duck-fat fried potatoes, roasted poblanos, and aged provolone in a house-baked roll."},
+      {name:"Heritage Chili Dog",rating:4.5,price:"$8.00",desc:"Thumann's frank with a venison-and-beef chili, pickled shallots, and smoked cheddar on a toasted potato bun."},
+    ],
+    reviews:[
+      {user:"MontclairFoodie",rating:5,text:"The Truffle Dog sounds pretentious but it works. It really, really works.",date:"2026-05-13",ac:"#3D7A56"},
+      {user:"EssexCountyEater",rating:4,text:"Finally a dog place in this area that takes it seriously. The chili alone is worth the trip.",date:"2026-05-06",ac:"#F0A500"},
+    ],
+    hasSpecial:true,
+  },
+  {
+    id:8, name:"Asbury Dogs", lat:40.2204, lng:-74.0121,
+    rating:4.4, reviewCount:312, emoji:"🎸",
+    bg:"linear-gradient(135deg,#1A0533,#5C1090)",
+    description:"As gritty and cool as the city it lives in, Asbury Dogs sits a block from the Stone Pony and serves dogs until 2am on weekends. Their Sonoran-style and fusion dogs have a devoted following among the boardwalk music crowd.",
+    styles:["Sonoran","Chili Dog","Corndog"],
+    brands:["Ball Park","Nathan's"],
+    topSpecialty:"Stone Pony Sonoran Dog",
+    menuItems:[
+      {name:"Stone Pony Sonoran Dog",rating:4.7,price:"$7.50",desc:"Bacon-wrapped frank in a steamed roll with pinto beans, pico de gallo, avocado crema, cotija, and jalapeño salsa — made for the late night crowd."},
+      {name:"Boardwalk Corndog",rating:4.5,price:"$5.00",desc:"Classic hand-dipped corndog batter, fried golden, served with honey mustard and hot sauce."},
+      {name:"Asbury Chili Dog",rating:4.4,price:"$6.50",desc:"All-beef frank with a spicy house chili loaded with chipotles, topped with sour cream and pickled jalapeños."},
+    ],
+    reviews:[
+      {user:"BruceFan_NJ",rating:5,text:"Grab a Stone Pony Sonoran before the show. This place is everything Asbury Park is about.",date:"2026-05-11",ac:"#5C1090"},
+      {user:"NightOwl_Jersey",rating:5,text:"Open late, great music neighborhood, incredible dogs. The Sonoran is insane.",date:"2026-05-04",ac:"#E03030"},
+    ],
+    hasSpecial:true,
+  },
+  {
+    id:9, name:"Trenton Makes Dogs", lat:40.2171, lng:-74.7429,
+    rating:4.3, reviewCount:289, emoji:"🏛️",
+    bg:"linear-gradient(135deg,#1C1C4E,#3232A0)",
+    description:"Named after Trenton's famous bridge slogan, this South Jersey institution has been fueling state workers and locals since 1971. Their Capital City Coney is a South Jersey take on the Detroit classic, with a chili recipe from the original owner's family.",
+    styles:["Coney Dog","Chili Dog"],
+    brands:["Hebrew National","Oscar Mayer"],
+    topSpecialty:"Capital City Coney",
+    menuItems:[
+      {name:"Capital City Coney",rating:4.6,price:"$5.75",desc:"All-beef frank with Trenton's own Coney sauce — a spiced beefy chili unique to this kitchen — topped with yellow mustard and minced raw onion."},
+      {name:"South Jersey Chili Dog",rating:4.4,price:"$6.00",desc:"Grilled frank smothered in thick house chili with shredded pepper jack and a drizzle of hot sauce."},
+      {name:"The Trenton Double",rating:4.3,price:"$9.50",desc:"Two franks, double the Coney sauce, extra cheese, extra onion — the lunch order that gets you through the afternoon."},
+    ],
+    reviews:[
+      {user:"TrentonMakesIt",rating:5,text:"Under-the-radar NJ dog spot. That Coney sauce is legitimately special.",date:"2026-05-08",ac:"#3232A0"},
+      {user:"CapitalFrank",rating:4,text:"Unpretentious, old-school, and great. Exactly what South Jersey deserves.",date:"2026-04-22",ac:"#56B6C2"},
+    ],
+    hasSpecial:false,
+  },
+  {
+    id:10, name:"Hot Grill", lat:40.8713, lng:-74.1414,
+    rating:4.8, reviewCount:1102, emoji:"♨️",
+    bg:"linear-gradient(135deg,#7A0E00,#C62828)",
+    description:"Another Clifton colossus — Hot Grill has been serving NJ's iconic Texas Wiener since 1961. Don't confuse this with a Texan chili dog. The NJ Texas Wiener is a deep-fried frank topped with a spiced Greek-style meat sauce, a tradition brought by Greek immigrants to Paterson and Clifton.",
+    styles:["Chili Dog","Coney Dog"],
+    brands:["Sabrett","Thumann's"],
+    topSpecialty:"NJ Texas Wiener",
+    menuItems:[
+      {name:"NJ Texas Wiener",rating:4.9,price:"$4.25",desc:"Deep-fried Sabrett frank topped with Hot Grill's secret Greek-spiced meat sauce, yellow mustard, and raw onion. A Clifton staple since 1961."},
+      {name:"Texas Wiener All the Way",rating:4.8,price:"$5.00",desc:"The Texas Wiener plus extra meat sauce, extra onion, and a side of the house hot pepper relish."},
+      {name:"Chili Cheese Texas Wiener",rating:4.6,price:"$5.75",desc:"The Hot Grill original topped with sharp cheddar — melted on top before serving."},
+    ],
+    reviews:[
+      {user:"CliftonBorn",rating:5,text:"Rutt's and Hot Grill — Clifton is the undisputed hot dog capital of New Jersey. Hot Grill's Texas Wiener is 10/10.",date:"2026-05-15",ac:"#C62828"},
+      {user:"GreekSauceFan",rating:5,text:"The sauce. That Greek-spiced meat sauce. Nobody else has it. Nobody.",date:"2026-05-09",ac:"#F0A500"},
+      {user:"PassaicCountyPride",rating:5,text:"Lines are long. Park in the lot. Worth it every single time.",date:"2026-04-27",ac:"#2ECC71"},
+    ],
+    hasSpecial:true,
+  },
+  {
+    id:11, name:"Syd's Drive-In", lat:40.7967, lng:-74.4815,
+    rating:4.3, reviewCount:234, emoji:"🏎️",
+    bg:"linear-gradient(135deg,#3D1500,#854700)",
+    description:"A Morris County drive-in beloved since 1955. Syd's is known for its no-nonsense approach: simple dogs, simple prices, and the best onion rings in the county. Their Texas Wiener keeps Morris County in the NJ hot dog conversation.",
+    styles:["Chili Dog","Italian Hotdog"],
+    brands:["Oscar Mayer","Ball Park"],
+    topSpecialty:"Syd's Texas Wiener",
+    menuItems:[
+      {name:"Syd's Texas Wiener",rating:4.6,price:"$4.00",desc:"Deep-fried frank with Syd's spiced meat chili sauce, yellow mustard, and raw onion — Morristown's beloved version of the NJ classic."},
+      {name:"Morris County Italian Dog",rating:4.4,price:"$7.50",desc:"Fried frank in round Italian bread with fried potatoes, sweet peppers, and grilled onion."},
+      {name:"Drive-In Combo",rating:4.3,price:"$10.00",desc:"A Syd's Texas Wiener plus their legendary onion rings and a fountain soda."},
+    ],
+    reviews:[
+      {user:"MorristownMike",rating:5,text:"Syd's has been here my whole life. The Texas Wiener is the best version in Morris County.",date:"2026-05-06",ac:"#854700"},
+      {user:"OnionRingOracle",rating:4,text:"People sleep on the onion rings here. Don't. Order them with everything.",date:"2026-04-19",ac:"#56B6C2"},
+    ],
+    hasSpecial:false,
+  },
+  {
+    id:12, name:"Dickie Dee's", lat:40.7940, lng:-74.1502,
+    rating:4.6, reviewCount:678, emoji:"🎉",
+    bg:"linear-gradient(135deg,#4A0000,#8B0000)",
+    description:"A Newark-area legend since 1956, Dickie Dee's is beloved for its pizza sausage — but its hot dogs are a closely guarded second obsession. The Italian Dog here uses a recipe unchanged since Eisenhower was president, and the chili is pure Newark soul food.",
+    styles:["Italian Hotdog","Chili Dog","Corndog"],
+    brands:["Thumann's","Hebrew National"],
+    topSpecialty:"Dickie's Italian Dog",
+    menuItems:[
+      {name:"Dickie's Italian Dog",rating:4.8,price:"$7.75",desc:"The 1956 original — a deep-fried Thumann's frank in hollowed Italian bread, loaded with crispy fried potatoes, green bell peppers, and sweet onions. No modifications. No substitutions."},
+      {name:"Newark Chili Dog",rating:4.7,price:"$6.00",desc:"Grilled frank with Dickie's thick Newark-style beef chili, raw onion, and yellow mustard on a soft club bun."},
+      {name:"Old School Corndog",rating:4.4,price:"$4.50",desc:"Classic battered corndog, hand-dipped and fried to order, served with Dickie's house hot sauce."},
+    ],
+    reviews:[
+      {user:"NewarkOriginal",rating:5,text:"Dickie Dee's is Newark heritage. That Italian Dog is a monument.",date:"2026-05-14",ac:"#8B0000"},
+      {user:"BellevilleEats",rating:5,text:"The chili dog is criminally underrated. Rich, beefy, perfect.",date:"2026-05-07",ac:"#F0A500"},
+      {user:"ItalianDogScholar",rating:5,text:"They refused to change the recipe in 70 years. That's not stubbornness — that's wisdom.",date:"2026-04-23",ac:"#E03030"},
+    ],
+    hasSpecial:true,
+  },
+];
+
+const SPECIALS = [
+  {
+    id:1, restaurantId:1, emoji:"🔥",
+    title:"Ripper Tuesday — $2.50 Rippers",
+    desc:"Every Tuesday, Rutt's Riphouse drops the price on their legendary Rippers to $2.50. Cash only. No ketchup. No exceptions.",
+    type:"daily", expires:"Every Tuesday",
+  },
+  {
+    id:2, restaurantId:2, emoji:"🇮🇹",
+    title:"Family Italian Dog Night",
+    desc:"Every Thursday: buy 3 Classic NJ Italian Dogs, get the 4th free. The whole family eats for NJ prices.",
+    type:"daily", expires:"Every Thursday",
+  },
+  {
+    id:3, restaurantId:3, emoji:"🌊",
+    title:"Shore Season Kickoff",
+    desc:"Memorial Day weekend: The Windmill's Shore Foot-Long Coney is $5. Start the summer the right way.",
+    type:"event", expires:"May 23–26 only",
+  },
+  {
+    id:4, restaurantId:5, emoji:"⭐",
+    title:"National Hot Dog Day at Max's",
+    desc:"On National Hot Dog Day, Max's celebrates the way they know best: all dogs are $2 from 11am to 2pm. Lines form early.",
+    type:"holiday", expires:"July 23 annually",
+  },
+  {
+    id:5, restaurantId:10, emoji:"♨️",
+    title:"Hot Grill Happy Hour",
+    desc:"Weekdays 2–5pm: Texas Wieners are $3 each. The best happy hour in Clifton — possibly in all of New Jersey.",
+    type:"daily", expires:"Mon–Fri 2–5pm",
+  },
+  {
+    id:6, restaurantId:8, emoji:"🎸",
+    title:"Late Night Stone Pony Deal",
+    desc:"On concert nights at the Stone Pony, Asbury Dogs offers a Sonoran Dog + draft beer for $10 from 9pm until close.",
+    type:"event", expires:"Concert nights only",
+  },
+  {
+    id:7, restaurantId:12, emoji:"🎉",
+    title:"Dickie Dee's Dog & Slice Friday",
+    desc:"Every Friday: get a Newark Chili Dog and a slice of Dickie's pizza for $8. The original Newark power lunch.",
+    type:"daily", expires:"Every Friday",
+  },
+  {
+    id:8, restaurantId:7, emoji:"🌿",
+    title:"Garden State Dog & Craft Beer Night",
+    desc:"Weeknights 5–8pm: any Garden State dog paired with a pint of NJ craft beer for $14. The Truffle Dog + local IPA is the move.",
+    type:"daily", expires:"Mon–Thu 5–8pm",
+  },
+  {
+    id:9, restaurantId:9, emoji:"🏛️",
+    title:"New Jersey Day Capital Special",
+    desc:"On New Jersey Day (November 1), Trenton Makes Dogs serves Capital City Coneys for $2. Honor the state that made your hot dog possible.",
+    type:"holiday", expires:"November 1 annually",
+  },
+];
+
+// ═══════════════════════════════════════════
+//  APP STATE
+// ═══════════════════════════════════════════
+
+const state = {
+  page: 'locator',
+  locatorView: 'map',
+  specialsTab: 'daily',
+  selectedRestaurantId: null,
+  mapInited: false,
+  map: null,
+  markers: [],
+  userLocation: { lat: 40.8713, lng: -74.1496 },
+  userMarker: null,
+  filters: {
+    radius: 10,
+    minRating: 0,
+    styles: [],
+    brands: [],
+  },
+  reviewStarInput: 0,
+  user: {
+    nickname: 'FrankFan',
+    photoUrl: null,
+    reviews: [],
+    visitCount: 0,
+  },
+};
+
+// ═══════════════════════════════════════════
+//  UTILITY FUNCTIONS
+// ═══════════════════════════════════════════
+
+function haversine(lat1, lng1, lat2, lng2) {
+  const R = 3958.8; // miles
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function renderStars(rating, size=13) {
+  const full = Math.floor(rating);
+  const half = rating % 1 >= 0.5 ? 1 : 0;
+  let s = '';
+  for (let i = 0; i < full; i++) s += '★';
+  if (half) s += '½';
+  return `<span style="color:var(--star);font-size:${size}px;font-weight:700;">${s}</span> <span style="font-size:${size}px;font-weight:700;">${rating.toFixed(1)}</span>`;
+}
+
+function starsEmoji(rating) {
+  const n = Math.round(rating);
+  return '★'.repeat(n) + '☆'.repeat(5-n);
+}
+
+function formatDate(d) {
+  return new Date(d).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+
+function getRestaurantById(id) {
+  return RESTAURANTS.find(r => r.id === id);
+}
+
+function showToast(msg, icon='star') {
+  const t = document.getElementById('toast');
+  t.innerHTML = `<i class="fa-solid fa-${icon}"></i>${msg}`;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+function getLevelInfo(reviewCount) {
+  for (const l of [...LEVELS].reverse()) {
+    if (reviewCount >= l.min) return l;
+  }
+  return LEVELS[0];
+}
+
+function getLevelProgress(reviewCount) {
+  const levels = LEVELS.filter(l => l.max !== Infinity);
+  for (let i = 0; i < levels.length; i++) {
+    const l = levels[i];
+    if (reviewCount >= l.min && reviewCount <= l.max) {
+      const range = l.max - l.min + 1;
+      const progress = reviewCount - l.min;
+      return { pct: (progress / range) * 100, current: reviewCount, needed: l.max + 1, levelMax: l.max };
+    }
+  }
+  return { pct: 100, current: reviewCount, needed: null, levelMax: null };
+}
+
+function getFilteredRestaurants() {
+  const { radius, minRating, styles, brands } = state.filters;
+  const { lat, lng } = state.userLocation;
+  return RESTAURANTS.filter(r => {
+    const dist = haversine(lat, lng, r.lat, r.lng);
+    if (dist > radius) return false;
+    if (r.rating < minRating) return false;
+    if (styles.length > 0 && !styles.some(s => r.styles.includes(s))) return false;
+    if (brands.length > 0 && !brands.some(b => r.brands.includes(b))) return false;
+    return true;
+  }).map(r => ({ ...r, distance: haversine(lat, lng, r.lat, r.lng) }));
+}
+
+// ═══════════════════════════════════════════
+//  NAVIGATION
+// ═══════════════════════════════════════════
+
+function navTo(page) {
+  state.page = page;
+  ['locator','specials','account'].forEach(p => {
+    document.getElementById(`${p}-page`).classList.toggle('active', p === page);
+    document.getElementById(`nav-${p}`).classList.toggle('active', p === page);
+  });
+  if (page === 'locator' && state.map) {
+    setTimeout(() => state.map.invalidateSize(), 100);
+  }
+  if (page === 'specials') renderSpecials();
+  if (page === 'account') renderAccount();
+}
+
+// ═══════════════════════════════════════════
+//  MAP
+// ═══════════════════════════════════════════
+
+function initMap() {
+  if (state.mapInited) return;
+  state.mapInited = true;
+
+  const map = L.map('map', {
+    center: [state.userLocation.lat, state.userLocation.lng],
+    zoom: 13,
+    zoomControl: true,
+  });
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '© OpenStreetMap contributors © CARTO',
+    subdomains: 'abcd',
+    maxZoom: 19,
+  }).addTo(map);
+
+  state.map = map;
+
+  // User location pulse marker
+  const userIcon = L.divIcon({
+    className: '',
+    html: `<div style="position:relative;width:40px;height:40px;display:flex;align-items:center;justify-content:center;">
+      <div class="user-pulse" style="position:absolute;"></div>
+      <div class="user-pin"></div>
+    </div>`,
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
+  });
+  state.userMarker = L.marker([state.userLocation.lat, state.userLocation.lng], { icon: userIcon })
+    .addTo(map)
+    .bindPopup('<b>You are here</b>');
+
+  renderMapMarkers();
+
+  // Try geolocation
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(pos => {
+      state.userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+      state.map.setView([state.userLocation.lat, state.userLocation.lng], 13);
+      state.userMarker.setLatLng([state.userLocation.lat, state.userLocation.lng]);
+      document.getElementById('map-location-text').textContent = 'Near your location';
+      renderMapMarkers();
+      renderList();
+    }, () => {
+      document.getElementById('map-location-text').textContent = 'New Jersey (demo)';
+    });
+  } else {
+    document.getElementById('map-location-text').textContent = 'New Jersey (demo)';
+  }
+}
+
+function renderMapMarkers() {
+  state.markers.forEach(m => m.remove());
+  state.markers = [];
+
+  const filtered = getFilteredRestaurants();
+  document.getElementById('map-count').textContent = filtered.length;
+
+  filtered.forEach(r => {
+    const icon = L.divIcon({
+      className: '',
+      html: `<div class="map-marker-outer" id="mm-${r.id}">
+        <div class="map-bubble">
+          <span class="mn">${r.name}</span>
+          <span class="mr">★${r.rating}</span>
+        </div>
+        <div class="map-pin-tri"></div>
+      </div>`,
+      iconSize: [140, 44],
+      iconAnchor: [70, 44],
+      popupAnchor: [0, -44],
+    });
+
+    const marker = L.marker([r.lat, r.lng], { icon })
+      .addTo(state.map)
+      .on('click', () => openDetail(r.id));
+
+    state.markers.push(marker);
+  });
+
+  if (state.map && filtered.length > 0) {
+    const group = L.featureGroup(state.markers);
+    state.map.fitBounds(group.getBounds().pad(0.15), { maxZoom: 14 });
+  }
+}
+
+// ═══════════════════════════════════════════
+//  LIST VIEW
+// ═══════════════════════════════════════════
+
+function setView(view) {
+  state.locatorView = view;
+  document.getElementById('map-toggle').classList.toggle('active', view === 'map');
+  document.getElementById('list-toggle').classList.toggle('active', view === 'list');
+  document.getElementById('map-container').style.display = view === 'map' ? '' : 'none';
+  const listEl = document.getElementById('list-view');
+  if (view === 'list') {
+    listEl.classList.add('visible');
+    renderList();
+  } else {
+    listEl.classList.remove('visible');
+    if (state.map) setTimeout(() => state.map.invalidateSize(), 100);
+  }
+}
+
+function renderList() {
+  const sortBy = document.getElementById('sort-select').value;
+  let restaurants = getFilteredRestaurants();
+
+  restaurants.sort((a, b) => {
+    if (sortBy === 'distance') return a.distance - b.distance;
+    if (sortBy === 'rating') return b.rating - a.rating;
+    if (sortBy === 'reviews') return b.reviewCount - a.reviewCount;
+    if (sortBy === 'name') return a.name.localeCompare(b.name);
+    return 0;
+  });
+
+  const container = document.getElementById('list-inner');
+  if (restaurants.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--subtext);">
+      <div style="font-size:48px;margin-bottom:12px;">🌭</div>
+      <div style="font-size:16px;font-weight:700;">No spots found</div>
+      <div style="font-size:13px;margin-top:6px;">Try adjusting your filters</div>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = restaurants.map(r => `
+    <div class="restaurant-card" onclick="openDetail(${r.id})">
+      <div class="card-img" style="background:${r.bg};">${r.emoji}</div>
+      <div class="card-body">
+        <div class="card-name">${r.name}</div>
+        <div class="card-meta">
+          <div class="card-rating">★ ${r.rating.toFixed(1)}</div>
+          <div class="card-rcount">(${r.reviewCount.toLocaleString()})</div>
+          <div class="card-dist">${r.distance.toFixed(1)} mi</div>
+        </div>
+        <div class="card-specialty">🏆 ${r.topSpecialty}</div>
+        <div class="card-tags">
+          ${r.styles.slice(0,2).map(s => `<span class="ctag">${s}</span>`).join('')}
+          ${r.brands.slice(0,1).map(b => `<span class="ctag">${b}</span>`).join('')}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════
+//  FILTERS
+// ═══════════════════════════════════════════
+
+function openFilters() {
+  document.getElementById('filter-overlay').classList.add('open');
+  document.getElementById('filter-panel').classList.add('open');
+}
+
+function closeFilters() {
+  document.getElementById('filter-overlay').classList.remove('open');
+  document.getElementById('filter-panel').classList.remove('open');
+}
+
+function selectRatingChip(el, val) {
+  document.querySelectorAll('.rchip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  el.dataset.selectedVal = val;
+}
+
+function applyFilters() {
+  state.filters.radius = parseInt(document.getElementById('radius-slider').value);
+  const activeChip = document.querySelector('.rchip.active');
+  state.filters.minRating = activeChip ? parseFloat(activeChip.dataset.min) : 0;
+  state.filters.styles = [...document.querySelectorAll('.style-cb:checked')].map(c => c.value);
+  state.filters.brands = [...document.querySelectorAll('.brand-cb:checked')].map(c => c.value);
+
+  const hasFilters = state.filters.minRating > 0 || state.filters.styles.length > 0 || state.filters.brands.length > 0 || state.filters.radius < 25;
+  document.getElementById('filter-btn').classList.toggle('active', hasFilters);
+
+  closeFilters();
+  renderMapMarkers();
+  if (state.locatorView === 'list') renderList();
+  showToast('Filters applied', 'filter');
+}
+
+function clearFilters() {
+  state.filters = { radius:10, minRating:0, styles:[], brands:[] };
+  document.getElementById('radius-slider').value = 10;
+  document.getElementById('radius-val').textContent = '10mi';
+  document.querySelectorAll('.rchip').forEach((c,i) => c.classList.toggle('active', i===0));
+  document.querySelectorAll('.style-cb, .brand-cb').forEach(c => c.checked = false);
+  document.getElementById('filter-btn').classList.remove('active');
+  showToast('Filters cleared', 'xmark');
+}
+
+// ═══════════════════════════════════════════
+//  RESTAURANT DETAIL
+// ═══════════════════════════════════════════
+
+function openDetail(id) {
+  state.selectedRestaurantId = id;
+  const r = RESTAURANTS.find(x => x.id === id);
+  if (!r) return;
+  // Merge in any user-submitted reviews
+  const userRevs = state.user.reviews.filter(v => v.restaurantId === id);
+  const allRevs = [...userRevs.map(v => ({
+    user: state.user.nickname,
+    rating: v.rating,
+    text: v.text,
+    date: v.date,
+    ac: '#F0A500',
+  })), ...r.reviews];
+
+  // Image placeholder section
+  const imgWrap = document.getElementById('d-img-wrap');
+  imgWrap.querySelector('.d-img-placeholder') && (imgWrap.querySelector('.d-img-placeholder').textContent = r.emoji);
+
+  // Dots (just decorative for 1 image)
+  document.getElementById('d-img-dots').innerHTML = '<div class="d-img-dot active"></div>';
+
+  // Build detail content
+  const scroll = document.getElementById('d-scroll');
+  scroll.innerHTML = `
+    <div class="d-name">${r.name}</div>
+    <div class="d-rating-row">
+      <div class="d-stars">★ ${r.rating.toFixed(1)}</div>
+      <div class="d-rcount">${(r.reviewCount + userRevs.length).toLocaleString()} reviews</div>
+      <div class="d-badges">
+        ${r.styles.map(s => `<span class="dbadge dbadge-style">${s}</span>`).join('')}
+      </div>
+    </div>
+    <div class="d-badges">
+      ${r.brands.map(b => `<span class="dbadge dbadge-brand">${b}</span>`).join('')}
+    </div>
+
+    <div class="d-section">
+      <div class="d-section-title"><i class="fa-solid fa-circle-info"></i> About</div>
+      <div class="d-desc">${r.description}</div>
+    </div>
+
+    <div class="d-divider"></div>
+
+    <div class="d-section">
+      <div class="d-section-title"><i class="fa-solid fa-utensils"></i> Key Menu Items</div>
+      ${r.menuItems.map(mi => `
+        <div class="menu-item">
+          <div class="mi-header">
+            <div class="mi-name">${mi.name}</div>
+            <div class="mi-price">${mi.price}</div>
+          </div>
+          <div class="mi-rating">${starsEmoji(mi.rating)} ${mi.rating.toFixed(1)}</div>
+          <div class="mi-desc">${mi.desc}</div>
+        </div>
+      `).join('')}
+    </div>
+
+    <div class="d-divider"></div>
+
+    <div class="d-section">
+      <div class="d-section-title"><i class="fa-solid fa-star"></i> Reviews</div>
+      ${allRevs.length === 0 ? '<div class="no-reviews">No reviews yet. Be the first!</div>' :
+        allRevs.map(rv => `
+          <div class="review-item">
+            <div class="rv-header">
+              <div class="rv-avatar" style="background:${rv.ac};">${rv.user[0].toUpperCase()}</div>
+              <div class="rv-meta">
+                <div class="rv-user">${rv.user}</div>
+                <div class="rv-date">${formatDate(rv.date)}</div>
+              </div>
+            </div>
+            <div class="rv-stars">${starsEmoji(rv.rating)} ${rv.rating.toFixed(1)}</div>
+            <div class="rv-text">${rv.text}</div>
+          </div>
+        `).join('')
+      }
+
+      <div class="review-form" id="review-form">
+        <div class="rf-title">✍️ Write a Review</div>
+        <div class="star-input" id="star-input">
+          ${[1,2,3,4,5].map(n => `<span class="si-star" data-val="${n}" onclick="setReviewStar(${n})">★</span>`).join('')}
+        </div>
+        <textarea class="rv-textarea" id="rv-textarea" placeholder="Share your frank experience…" rows="3"></textarea>
+        <button class="rv-submit" onclick="submitReview(${r.id})">Submit Review 🌭</button>
+      </div>
+    </div>
+  `;
+
+  state.reviewStarInput = 0;
+  scroll.scrollTop = 0;
+  document.getElementById('detail-overlay').classList.add('open');
+}
+
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.remove('open');
+  state.selectedRestaurantId = null;
+}
+
+function setReviewStar(val) {
+  state.reviewStarInput = val;
+  document.querySelectorAll('.si-star').forEach(s => {
+    s.classList.toggle('lit', parseInt(s.dataset.val) <= val);
+  });
+}
+
+function submitReview(restaurantId) {
+  const text = document.getElementById('rv-textarea').value.trim();
+  if (!state.reviewStarInput) { showToast('Please select a star rating', 'triangle-exclamation'); return; }
+  if (text.length < 10) { showToast('Write at least 10 characters', 'triangle-exclamation'); return; }
+
+  const review = {
+    restaurantId,
+    rating: state.reviewStarInput,
+    text,
+    date: new Date().toISOString().split('T')[0],
+  };
+  state.user.reviews.push(review);
+  state.user.visitCount++;
+
+  // Update the restaurant's review count in memory
+  const r = RESTAURANTS.find(x => x.id === restaurantId);
+  if (r) r.reviewCount++;
+
+  showToast('Review submitted! Thanks, ' + state.user.nickname + '!', 'check');
+  openDetail(restaurantId); // Refresh detail view
+}
+
+// ═══════════════════════════════════════════
+//  SPECIALS PAGE
+// ═══════════════════════════════════════════
+
+function setSpecialsTab(type) {
+  state.specialsTab = type;
+  ['daily','event','holiday'].forEach(t => {
+    document.getElementById(`spec-tab-${t}`).classList.toggle('active', t === type);
+  });
+  renderSpecialsContent();
+  document.getElementById('specials-content').scrollTop = 0;
+}
+
+function renderSpecials() {
+  // Populate count pills
+  const counts = { daily:0, event:0, holiday:0 };
+  SPECIALS.forEach(s => { if (counts[s.type] !== undefined) counts[s.type]++; });
+  document.getElementById('spec-pill-daily').textContent = counts.daily;
+  document.getElementById('spec-pill-event').textContent = counts.event;
+  document.getElementById('spec-pill-holiday').textContent = counts.holiday;
+  // Sync tab highlight to current state
+  ['daily','event','holiday'].forEach(t => {
+    document.getElementById(`spec-tab-${t}`).classList.toggle('active', t === state.specialsTab);
+  });
+  renderSpecialsContent();
+}
+
+function renderSpecialsContent() {
+  function specialCard(s) {
+    const r = getRestaurantById(s.restaurantId);
+    const typeLabel = { daily:'🗓️ Daily Deal', event:'🎉 Event', holiday:'🎊 Holiday' }[s.type];
+    const typeClass = { daily:'sct-daily', event:'sct-event', holiday:'sct-holiday' }[s.type];
+    return `
+      <div class="special-card" onclick="openDetail(${s.restaurantId});navTo('locator')">
+        <div class="sc-header">
+          <div class="sc-emoji">${s.emoji}</div>
+          <div class="sc-info">
+            <div class="sc-restaurant">${r ? r.name : ''}</div>
+            <div class="sc-title">${s.title}</div>
+            <div class="sc-desc">${s.desc}</div>
+          </div>
+        </div>
+        <div class="sc-footer">
+          <span class="sc-type ${typeClass}">${typeLabel}</span>
+          <span class="sc-expires"><i class="fa-regular fa-clock" style="margin-right:4px;"></i>${s.expires}</span>
+        </div>
+      </div>
+    `;
+  }
+
+  const filtered = SPECIALS.filter(s => s.type === state.specialsTab);
+  const container = document.getElementById('specials-content');
+
+  if (filtered.length === 0) {
+    container.innerHTML = `<div style="text-align:center;padding:60px 20px;color:var(--subtext);">
+      <div style="font-size:48px;margin-bottom:12px;">🌭</div>
+      <div style="font-size:15px;font-weight:700;">No specials in this category</div>
+    </div>`;
+  } else {
+    container.innerHTML = filtered.map(specialCard).join('');
+  }
+}
+
+// ═══════════════════════════════════════════
+//  ACCOUNT PAGE
+// ═══════════════════════════════════════════
+
+function renderAccount() {
+  const { nickname, photoUrl, reviews, visitCount } = state.user;
+  const level = getLevelInfo(reviews.length);
+  const progress = getLevelProgress(reviews.length);
+  const nextLevel = LEVELS[LEVELS.indexOf(level) + 1];
+
+  const myReviews = reviews.map(rv => {
+    const r = getRestaurantById(rv.restaurantId);
+    return `
+      <div class="my-rev-card">
+        <div class="mrc-restaurant">${r ? r.name : 'Unknown'}</div>
+        <div class="mrc-stars">${starsEmoji(rv.rating)} ${rv.rating.toFixed(1)}</div>
+        <div class="mrc-text">${rv.text}</div>
+        <div class="mrc-date">${formatDate(rv.date)}</div>
+      </div>
+    `;
+  }).join('');
+
+  const avatarInner = photoUrl
+    ? `<img src="${photoUrl}" alt="avatar">`
+    : `<span>${nickname[0].toUpperCase()}</span>`;
+
+  document.getElementById('account-content').innerHTML = `
+    <div class="profile-hero">
+      <div class="ph-top">
+        <div class="ph-avatar-wrap">
+          <div class="ph-avatar" onclick="document.getElementById('avatar-file-input').click()" style="background:var(--primary);">
+            ${avatarInner}
+          </div>
+          <div class="ph-avatar-edit" onclick="document.getElementById('avatar-file-input').click()">
+            <i class="fa-solid fa-camera"></i>
+          </div>
+        </div>
+        <div class="ph-info">
+          <div class="ph-nickname">
+            ${nickname}
+            <button class="ph-edit-nick" onclick="openNickModal()" title="Edit nickname"><i class="fa-solid fa-pen"></i></button>
+          </div>
+          <div class="ph-level-badge">
+            <span class="plb-emoji">${level.emoji}</span>
+            <span class="plb-name">${level.name}</span>
+          </div>
+        </div>
+      </div>
+      <div class="ph-stats">
+        <div class="ph-stat">
+          <div class="ps-val">${reviews.length}</div>
+          <div class="ps-label">Reviews</div>
+        </div>
+        <div class="ph-stat">
+          <div class="ps-val">${visitCount}</div>
+          <div class="ps-label">Visits</div>
+        </div>
+        <div class="ph-stat">
+          <div class="ps-val">${reviews.length > 0 ? (reviews.reduce((a,r)=>a+r.rating,0)/reviews.length).toFixed(1) : '—'}</div>
+          <div class="ps-label">Avg Rating</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ac-body">
+      <div class="level-progress-card">
+        <div class="lpc-header">
+          <span class="lpc-title">${level.emoji} ${level.name}</span>
+          <span class="lpc-next">${nextLevel ? `Next: ${nextLevel.name}` : '🏆 Max Level!'}</span>
+        </div>
+        <div class="prog-bar">
+          <div class="prog-fill" style="width:${Math.min(progress.pct,100)}%;"></div>
+        </div>
+        <div class="lpc-desc">${nextLevel ? `${progress.needed - progress.current} more review${progress.needed - progress.current !== 1 ? 's' : ''} to reach ${nextLevel.name}` : 'You\'ve reached the pinnacle of frankfurter fandom!'}</div>
+      </div>
+
+      <div class="ac-section">
+        <div class="ac-section-title">My Reviews (${reviews.length})</div>
+        ${reviews.length === 0
+          ? `<div class="empty-revs"><i class="fa-solid fa-comment-slash"></i><p>No reviews yet. Find a dog and share your thoughts!</p></div>`
+          : myReviews
+        }
+      </div>
+    </div>
+  `;
+}
+
+// ── Nickname Modal ──
+function openNickModal() {
+  document.getElementById('nm-input').value = state.user.nickname;
+  document.getElementById('nick-modal').classList.add('open');
+  setTimeout(() => document.getElementById('nm-input').focus(), 200);
+}
+
+function closeNickModal() {
+  document.getElementById('nick-modal').classList.remove('open');
+}
+
+function saveNickname() {
+  const val = document.getElementById('nm-input').value.trim();
+  if (val.length < 2) { showToast('Nickname must be at least 2 characters','triangle-exclamation'); return; }
+  state.user.nickname = val;
+  closeNickModal();
+  renderAccount();
+  showToast('Nickname updated!', 'check');
+}
+
+function handleAvatarUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    state.user.photoUrl = evt.target.result;
+    renderAccount();
+    showToast('Profile photo updated!', 'check');
+  };
+  reader.readAsDataURL(file);
+}
+
+// ── Enter on nickname modal ──
+document.getElementById('nm-input')?.addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveNickname();
+});
+
+// ═══════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Hide loading screen after a beat
+  setTimeout(() => {
+    document.getElementById('loading-screen').classList.add('hide');
+    setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 500);
+    initMap();
+  }, 1800);
+
+  // Radius slider live update
+  document.getElementById('radius-slider').addEventListener('input', function() {
+    document.getElementById('radius-val').textContent = this.value + 'mi';
+  });
+});
+</script>
+</body>
+</html>
