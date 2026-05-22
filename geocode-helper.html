@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Frank Finder — Geocoder</title>
+<style>
+  body { font-family: monospace; background: #1a1a1a; color: #e0e0e0; padding: 20px; }
+  h2 { color: #D4920A; }
+  button { background: #D4920A; color: #000; border: none; padding: 12px 24px; font-size: 16px; font-weight: bold; cursor: pointer; border-radius: 8px; margin-bottom: 20px; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  #status { margin: 10px 0; color: #aaa; min-height: 24px; }
+  #progress { width: 100%; background: #333; border-radius: 4px; height: 8px; margin-bottom: 16px; }
+  #bar { height: 8px; background: #D4920A; border-radius: 4px; width: 0%; transition: width 0.3s; }
+  #output { background: #0d0d0d; border: 1px solid #333; border-radius: 8px; padding: 16px; white-space: pre; overflow-x: auto; font-size: 12px; line-height: 1.6; max-height: 60vh; overflow-y: auto; }
+  .ok  { color: #2ECC71; }
+  .err { color: #E74C3C; }
+  .copy-btn { background: #444; color: #fff; border: none; padding: 8px 16px; cursor: pointer; border-radius: 6px; margin-bottom: 10px; font-size: 13px; }
+  .copy-btn:hover { background: #666; }
+  p { color: #aaa; line-height: 1.6; }
+</style>
+</head>
+<body>
+<h2>🌭 Frank Finder — Address Geocoder</h2>
+<p>Click the button below. This page will geocode all 40 restaurant addresses via OpenStreetMap Nominatim<br>
+and produce corrected lat/lng values. Copy the output and send it to Claude to update the app.</p>
+<button id="runBtn" onclick="runGeocoder()">▶ Geocode All Addresses</button>
+<div id="progress"><div id="bar"></div></div>
+<div id="status">Ready.</div>
+<button class="copy-btn" onclick="copyOutput()" style="display:none" id="copyBtn">📋 Copy Output</button>
+<div id="output">Results will appear here...</div>
+
+<script>
+const RESTAURANTS = [
+  { id:1,  name:"Rutt's Hut",                        address:"417 River Rd, Clifton, NJ 07014" },
+  { id:2,  name:"Jimmy Buff's Italian Hot Dogs",      address:"60 Washington St, West Orange, NJ 07052" },
+  { id:3,  name:"The Windmill",                       address:"586 Ocean Ave, Long Branch, NJ 07740" },
+  { id:4,  name:"Hiram's Roadstand",                  address:"1345 Palisade Ave, Fort Lee, NJ 07024" },
+  { id:5,  name:"Max's Frankfurters",                 address:"25 Matilda Ter, Long Branch, NJ 07740" },
+  { id:6,  name:"Callahan's Drive-In",                address:"10 Broad St, Norwood, NJ 07648" },
+  { id:7,  name:"Johnny & Hanges",                    address:"23-20 Maple Ave, Fair Lawn, NJ 07410" },
+  { id:8,  name:"Hot Dog Johnny's",                   address:"333 US-46, Buttzville, NJ 07823" },
+  { id:9,  name:"Charlie's Pool Room",                address:"68 E Main St, Bound Brook, NJ 08805" },
+  { id:10, name:"Hot Grill",                          address:"669 Lexington Ave, Clifton, NJ 07011" },
+  { id:11, name:"The Windmill (Belmar)",              address:"1201 Ocean Ave, Belmar, NJ 07719" },
+  { id:12, name:"Dickie Dee's",                       address:"380 Bloomfield Ave, Newark, NJ 07107" },
+  { id:13, name:"1950's Original",                    address:"325 Broadway, Westwood, NJ 07675" },
+  { id:14, name:"Andy's Roadside Dive",               address:"324 Howard Blvd, Mount Arlington, NJ 07856" },
+  { id:15, name:"Boulevard Drinks",                   address:"48 Journal Square Plaza, Jersey City, NJ 07306" },
+  { id:16, name:"Bubba Dog's",                        address:"5999 Pleasure Ave, Sea Isle City, NJ 08243" },
+  { id:17, name:"Captain Paul's Firehouse Dogs",      address:"2230 Princeton Pike, Lawrence, NJ 08648" },
+  { id:18, name:"Colonial Grill",                     address:"464 Chamberlain Ave, Paterson, NJ 07522" },
+  { id:19, name:"Designer Dawgs",                     address:"3 Main Street, Clinton, NJ 08809" },
+  { id:20, name:"Destination Dogs",                   address:"101 Paterson St, New Brunswick, NJ 08901" },
+  { id:21, name:"Dover Grill",                        address:"240 US-46, Dover, NJ 07801" },
+  { id:22, name:"Galloping Hill Inn",                 address:"325 Chestnut St, Union, NJ 07083" },
+  { id:23, name:"The Goffle Grill",                   address:"1140 Goffle Rd, Hawthorne, NJ 07506" },
+  { id:24, name:"Hank's Franks",                      address:"210 US-46 E, Lodi, NJ 07644" },
+  { id:25, name:"Hot Dog Caboose",                    address:"211 Greenwood Ave, Midland Park, NJ 07432" },
+  { id:26, name:"Hot Dog House",                      address:"510 NJ-17, Carlstadt, NJ 07072" },
+  { id:27, name:"HotDog Tommy's",                     address:"319 Beach Ave, Cape May, NJ 08204" },
+  { id:28, name:"J&G Texas Weiners",                  address:"238 North Ave, Dunellen, NJ 08812" },
+  { id:29, name:"Jerry's Famous Frankfurters",        address:"906 2nd Ave, Elizabeth, NJ 07202" },
+  { id:30, name:"Jersey Dog",                         address:"77 Water St, Newton, NJ 07860" },
+  { id:31, name:"Lou Dogs",                           address:"3800 Boardwalk, Sea Isle City, NJ 08243" },
+  { id:32, name:"Lover Dogs",                         address:"822 Main Ave, Passaic, NJ 07055" },
+  { id:33, name:"Maui's Dog House",                   address:"806 New Jersey Ave, North Wildwood, NJ 08260" },
+  { id:34, name:"Middlesex Texas Weiners",            address:"355 Bound Brook Rd, Middlesex, NJ 08846" },
+  { id:35, name:"Randy the Hot Dog Guy",              address:"303 Long Ave, Hillside, NJ 07205" },
+  { id:36, name:"Russ Ayres Hot Dogs",                address:"680 US-206, Bordentown, NJ 08505" },
+  { id:37, name:"Sonny's Grille",                     address:"821 Belmar Mall Plaza, Belmar, NJ 07719" },
+  { id:38, name:"Tommy's Italian Sausage & Hot Dogs", address:"900 2nd Ave, Elizabeth, NJ 07201" },
+  { id:39, name:"The Windmill (Brick)",               address:"Route 70, Brick, NJ 08724" },
+  { id:40, name:"The Windmill (Red Bank)",            address:"Bridge Ave, Red Bank, NJ 07701" },
+];
+
+async function geocode(address) {
+  const q = encodeURIComponent(address + ', USA');
+  const url = `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`;
+  const res = await fetch(url, { headers: { 'User-Agent': 'FrankFinder Geocoder' } });
+  const json = await res.json();
+  if (json.length > 0) return { lat: parseFloat(json[0].lat), lng: parseFloat(json[0].lon) };
+  return null;
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function runGeocoder() {
+  const btn = document.getElementById('runBtn');
+  const out = document.getElementById('output');
+  const bar = document.getElementById('bar');
+  const status = document.getElementById('status');
+  btn.disabled = true;
+  out.innerHTML = '';
+
+  const results = [];
+  for (let i = 0; i < RESTAURANTS.length; i++) {
+    const r = RESTAURANTS[i];
+    status.textContent = `Geocoding ${i+1}/${RESTAURANTS.length}: ${r.name}...`;
+    bar.style.width = `${Math.round((i / RESTAURANTS.length) * 100)}%`;
+
+    await sleep(1100); // Nominatim rate limit: 1 req/sec
+    let coords = null;
+    try { coords = await geocode(r.address); } catch(e) {}
+
+    if (coords) {
+      results.push({ id: r.id, lat: coords.lat, lng: coords.lng });
+      out.innerHTML += `<span class="ok">✓ id:${r.id} ${r.name}\n   lat:${coords.lat}, lng:${coords.lng}\n</span>`;
+    } else {
+      results.push({ id: r.id, lat: null, lng: null });
+      out.innerHTML += `<span class="err">✗ id:${r.id} ${r.name} — no result\n</span>`;
+    }
+    out.scrollTop = out.scrollHeight;
+  }
+
+  bar.style.width = '100%';
+  status.textContent = '✅ Done! Copy the output below and paste it into Claude.';
+
+  // Build the final output block
+  out.innerHTML += '\n\n=== PASTE THIS TO CLAUDE ===\n';
+  const lines = results.map(r =>
+    r.lat != null
+      ? `id:${r.id} lat:${r.lat} lng:${r.lng}`
+      : `id:${r.id} FAILED`
+  ).join('\n');
+  out.innerHTML += lines;
+
+  document.getElementById('copyBtn').style.display = 'inline-block';
+  btn.disabled = false;
+}
+
+function copyOutput() {
+  const text = document.getElementById('output').innerText;
+  const block = text.split('=== PASTE THIS TO CLAUDE ===\n')[1] || text;
+  navigator.clipboard.writeText(block.trim()).then(() => {
+    document.getElementById('copyBtn').textContent = '✅ Copied!';
+    setTimeout(() => document.getElementById('copyBtn').textContent = '📋 Copy Output', 2000);
+  });
+}
+</script>
+</body>
+</html>

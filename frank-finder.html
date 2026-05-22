@@ -2339,6 +2339,73 @@ document.getElementById('nm-input')?.addEventListener('keydown', e => {
 });
 
 // ═══════════════════════════════════════════
+//  GEOCODING — address → lat/lng via Nominatim
+//  Results cached in localStorage so it only
+//  runs once; every visit after that is instant.
+// ═══════════════════════════════════════════
+
+const GEO_CACHE_KEY = 'ff_geocache_v2';
+
+function getGeoCache() {
+  try { return JSON.parse(localStorage.getItem(GEO_CACHE_KEY) || '{}'); }
+  catch(e) { return {}; }
+}
+function saveGeoCache(c) {
+  try { localStorage.setItem(GEO_CACHE_KEY, JSON.stringify(c)); }
+  catch(e) {}
+}
+
+async function geocodeOne(address) {
+  const q = encodeURIComponent(address + ', USA');
+  const res = await fetch(
+    `https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`,
+    { headers: { 'User-Agent': 'FrankFinder/1.0 (NJ hot dog locator)' } }
+  );
+  const data = await res.json();
+  if (data && data.length > 0)
+    return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+  return null;
+}
+
+async function geocodeRestaurants() {
+  const cache = getGeoCache();
+
+  // Apply cached coords immediately — accurate on all visits after the first
+  RESTAURANTS.forEach(r => {
+    if (cache[r.id]) { r.lat = cache[r.id].lat; r.lng = cache[r.id].lng; }
+  });
+
+  // Find which ones still need geocoding
+  const missing = RESTAURANTS.filter(r => !cache[r.id]);
+  if (missing.length === 0) return; // all done
+
+  // Geocode in background, one per second (Nominatim rate limit)
+  // Update map markers every 5 resolutions so pins snap in smoothly
+  let batch = 0;
+  for (const r of missing) {
+    await new Promise(res => setTimeout(res, 1100));
+    try {
+      const coords = await geocodeOne(r.address);
+      if (coords) {
+        r.lat = coords.lat;
+        r.lng = coords.lng;
+        cache[r.id] = coords;
+        saveGeoCache(cache);
+        batch++;
+        if (batch % 5 === 0 && state.mapInited && state.page === 'locator') {
+          renderMapMarkers();
+        }
+      }
+    } catch(e) { /* keep existing approximate coords */ }
+  }
+  // Final flush once all done
+  if (state.mapInited && state.page === 'locator') renderMapMarkers();
+}
+
+// Kick off geocoding immediately (runs async in background)
+geocodeRestaurants();
+
+// ═══════════════════════════════════════════
 //  INIT
 // ═══════════════════════════════════════════
 
