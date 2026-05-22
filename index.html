@@ -1991,6 +1991,7 @@ function openDetail(id) {
 
   // Image placeholder section
   const imgWrap = document.getElementById('d-img-wrap');
+  imgWrap.style.background = r.bg;
   imgWrap.querySelector('.d-img-placeholder') && (imgWrap.querySelector('.d-img-placeholder').textContent = r.emoji);
 
   // Dots (just decorative for 1 image)
