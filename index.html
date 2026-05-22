@@ -253,11 +253,13 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
   display:flex;align-items:center;gap:8px;margin-top:16px;margin-bottom:4px;
   font-size:13px;font-weight:700;color:var(--blue);text-decoration:none;
   background:rgba(21,101,192,0.07);border:1px solid rgba(21,101,192,0.18);
-  border-radius:10px;padding:9px 13px;width:fit-content;
+  border-radius:10px;padding:9px 13px;
   transition:background 0.2s;
 }
 .d-address:hover{background:rgba(21,101,192,0.13);}
 .d-address i{font-size:14px;color:var(--blue);flex-shrink:0;}
+.d-address-text{flex:1;min-width:0;}
+.d-address-dist{font-size:12px;font-weight:800;color:var(--blue);opacity:0.7;white-space:nowrap;flex-shrink:0;margin-left:4px;}
 
 /* Menu items */
 .menu-item{background:var(--surface);border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid var(--border);}
@@ -2170,6 +2172,9 @@ function openDetail(id) {
   // Dots (just decorative for 1 image)
   document.getElementById('d-img-dots').innerHTML = '<div class="d-img-dot active"></div>';
 
+  // Distance from user
+  const dist = haversine(state.userLocation.lat, state.userLocation.lng, r.lat, r.lng);
+
   // Build detail content
   const scroll = document.getElementById('d-scroll');
   scroll.innerHTML = `
@@ -2187,7 +2192,9 @@ function openDetail(id) {
 
     ${r.address ? `
     <a class="d-address" href="https://maps.google.com/maps?q=${encodeURIComponent(r.address)}" target="_blank" rel="noopener">
-      <i class="fa-solid fa-location-dot"></i>${r.address}
+      <i class="fa-solid fa-location-dot"></i>
+      <span class="d-address-text">${r.address}</span>
+      <span class="d-address-dist">${dist.toFixed(1)} mi</span>
     </a>` : ''}
 
     <div class="d-section">
