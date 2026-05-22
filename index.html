@@ -433,6 +433,12 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 /* Nickname modal */
 #nick-modal{position:fixed;inset:0;z-index:700;display:none;align-items:flex-end;}
 #nick-modal.open{display:flex;}
+/* Sign-in modal */
+#signin-modal{position:fixed;inset:0;z-index:710;display:none;align-items:center;justify-content:center;padding:20px;}
+#signin-modal.open{display:flex;}
+.sm-backdrop{position:absolute;inset:0;background:rgba(44,24,16,0.55);backdrop-filter:blur(3px);}
+.sm-card-wrap{position:relative;z-index:1;width:100%;max-width:400px;max-height:88vh;overflow-y:auto;border-radius:20px;}
+.sm-card-wrap .profile-signin-card{margin:0;}
 .nm-backdrop{position:absolute;inset:0;background:rgba(44,24,16,0.45);}
 .nm-panel{
   position:relative;width:100%;background:var(--surface);
@@ -683,7 +689,7 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
           <input type="checkbox" id="favorites-toggle">
           <span class="toggle-slider"></span>
         </label>
-        <span class="toggle-label">❤️ Favorites Only</span>
+        <span class="toggle-label">Favorites Only ❤️</span>
       </div>
     </div>
 
@@ -762,6 +768,12 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
     <input class="nm-input" id="nm-input" type="text" placeholder="Your hotdog alias…" maxlength="24">
     <button class="nm-save" onclick="saveNickname()">Save</button>
   </div>
+</div>
+
+<!-- ── SIGN-IN MODAL ── -->
+<div id="signin-modal">
+  <div class="sm-backdrop" onclick="closeSignInModal()"></div>
+  <div class="sm-card-wrap" id="signin-modal-content"></div>
 </div>
 
 <!-- ── AVATAR FILE INPUT (hidden) ── -->
@@ -2214,6 +2226,52 @@ const GOOGLE_G_SVG = `<svg width="20" height="20" viewBox="0 0 48 48" xmlns="htt
 </svg>`;
 
 // ═══════════════════════════════════════════
+//  SIGN-IN MODAL
+// ═══════════════════════════════════════════
+
+function getSignInCardHTML() {
+  return `
+    <div class="profile-signin-card">
+      <div class="psc-logo">🌭</div>
+      <div class="psc-title">Join Frank Finder</div>
+      <div class="psc-sub">Create a free account to save favorites and unlock the full Frank Finder experience.</div>
+      <ul class="psc-benefits">
+        <li>
+          <span class="psc-icon">❤️</span>
+          <div><strong>Save favorites</strong><br><span class="psc-desc">Bookmark your go-to spots and filter the map to show only your saved dogs.</span></div>
+        </li>
+        <li>
+          <span class="psc-icon">✍️</span>
+          <div><strong>Post reviews</strong><br><span class="psc-desc">Share your frank opinions and help others find the best dogs in NJ.</span></div>
+        </li>
+        <li>
+          <span class="psc-icon">🏆</span>
+          <div><strong>Level up</strong><br><span class="psc-desc">Earn ranks from Mustard Rookie all the way to Hot Dog Legend as you review more spots.</span></div>
+        </li>
+        <li>
+          <span class="psc-icon">👤</span>
+          <div><strong>Your profile</strong><br><span class="psc-desc">Track your visits, stats, and full review history in one place.</span></div>
+        </li>
+      </ul>
+      <button class="google-btn" onclick="signInWithGoogle()">
+        ${GOOGLE_G_SVG}
+        Continue with Google
+      </button>
+      <div class="login-privacy">By signing in you agree to our terms.<br>We only store your nickname, level, reviews & favorites.</div>
+    </div>
+  `;
+}
+
+function openSignInModal() {
+  document.getElementById('signin-modal-content').innerHTML = getSignInCardHTML();
+  document.getElementById('signin-modal').classList.add('open');
+}
+
+function closeSignInModal() {
+  document.getElementById('signin-modal').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════
 //  FAVORITES
 // ═══════════════════════════════════════════
 
@@ -2231,6 +2289,7 @@ function saveFavorites() {
 }
 
 function toggleFavorite() {
+  if (!currentUser) { openSignInModal(); return; }
   const id = state.selectedRestaurantId;
   if (!id) return;
   const idx = state.user.favorites.indexOf(id);
@@ -2275,32 +2334,7 @@ function renderProfile() {
 
   // Anonymous user — show sign-in prompt
   if (!currentUser) {
-    document.getElementById('profile-content').innerHTML = `
-      <div class="profile-signin-card">
-        <div class="psc-logo">🌭</div>
-        <div class="psc-title">Join Frank Finder</div>
-        <div class="psc-sub">Create a free account to unlock the full Frank Finder experience.</div>
-        <ul class="psc-benefits">
-          <li>
-            <span class="psc-icon">✍️</span>
-            <div><strong>Post reviews</strong><br><span class="psc-desc">Share your frank opinions and help others find the best dogs in NJ.</span></div>
-          </li>
-          <li>
-            <span class="psc-icon">🏆</span>
-            <div><strong>Level up</strong><br><span class="psc-desc">Earn ranks from Frankfurter Fan all the way to Frank Legend as you review more spots.</span></div>
-          </li>
-          <li>
-            <span class="psc-icon">👤</span>
-            <div><strong>Your profile</strong><br><span class="psc-desc">Track your visits, stats, and full review history in one place.</span></div>
-          </li>
-        </ul>
-        <button class="google-btn" onclick="signInWithGoogle()">
-          ${GOOGLE_G_SVG}
-          Continue with Google
-        </button>
-        <div class="login-privacy">By signing in you agree to our terms.<br>We only store your nickname, level & reviews.</div>
-      </div>
-    `;
+    document.getElementById('profile-content').innerHTML = getSignInCardHTML();
     return;
   }
 
@@ -2638,6 +2672,7 @@ document.addEventListener('DOMContentLoaded', () => {
       currentUser = user;
       if (user) {
         try { await loadOrCreateProfile(user); } catch(e) { console.warn('Profile load error:', e); }
+        closeSignInModal(); // dismiss sign-in prompt if open
       } else {
         currentUser = null;
         userProfile = null;
