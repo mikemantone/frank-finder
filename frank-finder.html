@@ -486,9 +486,9 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 .leaflet-control-zoom-in{border-radius:20px 20px 0 0!important;border-bottom:none!important;}
 .leaflet-control-zoom-out{border-radius:0 0 20px 20px!important;}
 .leaflet-bar{box-shadow:0 2px 12px rgba(44,24,16,0.18)!important;border-radius:20px!important;}
-/* Keep zoom control below all overlays (filter z-index:501, detail z-index:600) */
-.leaflet-control-container{z-index:300!important;}
-.leaflet-top,.leaflet-bottom{z-index:300!important;}
+/* Controls must sit above Leaflet's map pane (z-index:400) but below our overlays (filter:500, detail:600) */
+.leaflet-control-container{z-index:450!important;}
+.leaflet-top,.leaflet-bottom{z-index:450!important;}
 /* Push bottomright zoom above the nav bar */
 .leaflet-bottom.leaflet-right{bottom:calc(var(--nav-height) + 12px)!important;}
 .leaflet-control-attribution{
