@@ -157,7 +157,8 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
   align-self:flex-start;margin-top:5px;
 }
 .card-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;}
-.ctag{font-size:10px;font-weight:700;background:var(--surface3);color:var(--subtext);border-radius:4px;padding:2px 6px;}
+.ctag{font-size:10px;font-weight:800;background:var(--primary-dim);color:var(--primary);border:1px solid rgba(240,165,0,0.3);border-radius:20px;padding:2px 8px;}
+.ctag-brand{background:var(--accent-dim);color:var(--accent);border-color:rgba(183,28,42,0.3);}
 
 /* ── FILTER PANEL ── */
 #filter-overlay{position:fixed;top:0;left:0;right:0;bottom:var(--nav-height);background:rgba(44,24,16,0.45);z-index:500;opacity:0;pointer-events:none;transition:opacity var(--tr);}
@@ -2075,7 +2076,7 @@ function renderList() {
         <div class="card-specialty">🏆 ${r.topSpecialty}</div>
         <div class="card-tags">
           ${r.styles.slice(0,2).map(s => `<span class="ctag">${s}</span>`).join('')}
-          ${r.brands.slice(0,1).map(b => `<span class="ctag">${b}</span>`).join('')}
+          ${r.brands.slice(0,1).map(b => `<span class="ctag ctag-brand">${b}</span>`).join('')}
         </div>
       </div>
     </div>
