@@ -491,8 +491,9 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 /* Controls must sit above Leaflet's map pane (z-index:400) but below our overlays (filter:500, detail:600) */
 .leaflet-control-container{z-index:450!important;}
 .leaflet-top,.leaflet-bottom{z-index:450!important;}
-/* Equal gap from nav bar and right edge */
+/* Equal gap from nav bar top and right edge */
 .leaflet-bottom.leaflet-right{bottom:calc(var(--nav-height) + 12px)!important;}
+.leaflet-bottom .leaflet-control{margin-bottom:0!important;}
 .leaflet-right .leaflet-control{margin-right:12px!important;}
 .leaflet-control-attribution{
   font-size:9px!important;opacity:0.5;background:rgba(255,255,255,0.6)!important;
