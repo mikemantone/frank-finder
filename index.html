@@ -2288,8 +2288,14 @@ function saveFavorites() {
   } catch(e) {}
 }
 
+let pendingFavoriteId = null; // restaurant to auto-favorite after sign-in
+
 function toggleFavorite() {
-  if (!currentUser) { openSignInModal(); return; }
+  if (!currentUser) {
+    pendingFavoriteId = state.selectedRestaurantId; // remember what they wanted to save
+    openSignInModal();
+    return;
+  }
   const id = state.selectedRestaurantId;
   if (!id) return;
   const idx = state.user.favorites.indexOf(id);
@@ -2673,6 +2679,14 @@ document.addEventListener('DOMContentLoaded', () => {
       if (user) {
         try { await loadOrCreateProfile(user); } catch(e) { console.warn('Profile load error:', e); }
         closeSignInModal(); // dismiss sign-in prompt if open
+        // Apply any favorite the user was trying to save before sign-in
+        if (pendingFavoriteId !== null && !state.user.favorites.includes(pendingFavoriteId)) {
+          state.user.favorites.push(pendingFavoriteId);
+          saveFavorites();
+          updateFavBtn();
+          showToast('Added to favorites', 'heart');
+        }
+        pendingFavoriteId = null;
       } else {
         currentUser = null;
         userProfile = null;
