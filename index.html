@@ -2074,8 +2074,8 @@ function renderList() {
         </div>
         <div class="card-specialty">🏆 ${r.topSpecialty}</div>
         <div class="card-tags">
-          ${r.brands.slice(0,1).map(b => `<span class="ctag ctag-brand">${b}</span>`).join('')}
-          ${r.styles.slice(0,2).map(s => `<span class="ctag">${s}</span>`).join('')}
+          ${r.brands.map(b => `<span class="ctag ctag-brand">${b}</span>`).join('')}
+          ${r.styles.map(s => `<span class="ctag">${s}</span>`).join('')}
         </div>
       </div>
     </div>
