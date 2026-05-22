@@ -172,7 +172,18 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 .fp-section-label{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:var(--subtext);margin-bottom:10px;}
 .radius-row{display:flex;align-items:center;gap:10px;}
 .radius-slider{flex:1;accent-color:var(--primary);cursor:pointer;height:4px;}
+.radius-slider:disabled{opacity:0.35;cursor:default;}
 .radius-val{font-size:14px;font-weight:900;color:var(--primary);min-width:40px;text-align:right;}
+.radius-val.disabled{color:var(--subtext);}
+/* Toggle switch */
+.toggle-wrap{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+.toggle-switch{position:relative;width:38px;height:22px;flex-shrink:0;}
+.toggle-switch input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:20px;cursor:pointer;transition:background 0.2s;}
+.toggle-slider:before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform 0.2s;}
+.toggle-switch input:checked + .toggle-slider{background:var(--primary);}
+.toggle-switch input:checked + .toggle-slider:before{transform:translateX(16px);}
+.toggle-label{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1px;color:var(--subtext);}
 .rating-chips{display:flex;gap:8px;flex-wrap:wrap;}
 .rchip{
   padding:6px 13px;border-radius:20px;border:1px solid var(--border);
@@ -462,10 +473,20 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 
 /* Leaflet light overrides */
 .leaflet-container{background:#F5ECD7!important;}
-.leaflet-control-zoom{border:1px solid var(--border)!important;z-index:400!important;}
-.leaflet-control-zoom a{background:var(--surface)!important;color:var(--text)!important;border-color:var(--border)!important;}
-.leaflet-bar{box-shadow:0 2px 12px rgba(44,24,16,0.15)!important;}
-.leaflet-control-container{z-index:400!important;}
+.leaflet-control-zoom{border:none!important;}
+.leaflet-control-zoom a{
+  background:var(--surface)!important;color:var(--text)!important;
+  border:1px solid var(--border)!important;
+  width:36px!important;line-height:36px!important;font-size:18px!important;
+}
+.leaflet-control-zoom-in{border-radius:20px 20px 0 0!important;border-bottom:none!important;}
+.leaflet-control-zoom-out{border-radius:0 0 20px 20px!important;}
+.leaflet-bar{box-shadow:0 2px 12px rgba(44,24,16,0.18)!important;border-radius:20px!important;}
+/* Keep zoom control below all overlays (filter z-index:501, detail z-index:600) */
+.leaflet-control-container{z-index:300!important;}
+.leaflet-top,.leaflet-bottom{z-index:300!important;}
+/* Push bottomright zoom above the nav bar */
+.leaflet-bottom.leaflet-right{bottom:calc(var(--nav-height) + 12px)!important;}
 .leaflet-control-attribution{
   font-size:9px!important;opacity:0.5;background:rgba(255,255,255,0.6)!important;
   border-radius:4px 0 0 4px!important;padding:2px 5px!important;
@@ -610,10 +631,16 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 
   <div class="fp-scroll">
     <div class="fp-section">
-      <div class="fp-section-label">Radius</div>
+      <div class="toggle-wrap">
+        <label class="toggle-switch">
+          <input type="checkbox" id="distance-toggle" onchange="updateDistanceToggle(this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-label">Distance Filter</span>
+      </div>
       <div class="radius-row">
-        <input type="range" class="radius-slider" id="radius-slider" min="1" max="25" value="10" oninput="document.getElementById('radius-val').textContent=this.value+'mi'">
-        <span class="radius-val" id="radius-val">10mi</span>
+        <input type="range" class="radius-slider" id="radius-slider" min="1" max="100" value="25" disabled oninput="document.getElementById('radius-val').textContent=this.value+'mi'">
+        <span class="radius-val disabled" id="radius-val">Any</span>
       </div>
     </div>
 
@@ -1571,7 +1598,8 @@ const state = {
   userLocation: { lat: 40.8713, lng: -74.1496 },
   userMarker: null,
   filters: {
-    radius: 10,
+    distanceEnabled: false,
+    radius: 25,
     minRating: 0,
     styles: [],
     brands: [],
@@ -1647,11 +1675,11 @@ function getLevelProgress(reviewCount) {
 }
 
 function getFilteredRestaurants() {
-  const { radius, minRating, styles, brands } = state.filters;
+  const { distanceEnabled, radius, minRating, styles, brands } = state.filters;
   const { lat, lng } = state.userLocation;
   return RESTAURANTS.filter(r => {
     const dist = haversine(lat, lng, r.lat, r.lng);
-    if (dist > radius) return false;
+    if (distanceEnabled && dist > radius) return false;
     if (r.rating < minRating) return false;
     if (styles.length > 0 && !styles.some(s => r.styles.includes(s))) return false;
     if (brands.length > 0 && !brands.some(b => r.brands.includes(b))) return false;
@@ -1687,9 +1715,10 @@ function initMap() {
   const map = L.map('map', {
     center: [state.userLocation.lat, state.userLocation.lng],
     zoom: 13,
-    zoomControl: true,
+    zoomControl: false,   // we add it manually at bottomright to avoid the info bar
     attributionControl: false,
   });
+  L.control.zoom({ position: 'bottomright' }).addTo(map);
   L.control.attribution({ position: 'topright', prefix: false }).addTo(map);
 
   L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
@@ -1849,14 +1878,28 @@ function selectRatingChip(el, val) {
   el.dataset.selectedVal = val;
 }
 
+function updateDistanceToggle(enabled) {
+  const slider = document.getElementById('radius-slider');
+  const valEl = document.getElementById('radius-val');
+  slider.disabled = !enabled;
+  if (enabled) {
+    valEl.textContent = slider.value + 'mi';
+    valEl.classList.remove('disabled');
+  } else {
+    valEl.textContent = 'Any';
+    valEl.classList.add('disabled');
+  }
+}
+
 function applyFilters() {
+  state.filters.distanceEnabled = document.getElementById('distance-toggle').checked;
   state.filters.radius = parseInt(document.getElementById('radius-slider').value);
   const activeChip = document.querySelector('.rchip.active');
   state.filters.minRating = activeChip ? parseFloat(activeChip.dataset.min) : 0;
   state.filters.styles = [...document.querySelectorAll('.style-cb:checked')].map(c => c.value);
   state.filters.brands = [...document.querySelectorAll('.brand-cb:checked')].map(c => c.value);
 
-  const hasFilters = state.filters.minRating > 0 || state.filters.styles.length > 0 || state.filters.brands.length > 0 || state.filters.radius < 25;
+  const hasFilters = state.filters.minRating > 0 || state.filters.styles.length > 0 || state.filters.brands.length > 0 || state.filters.distanceEnabled;
   document.getElementById('filter-btn').classList.toggle('active', hasFilters);
 
   closeFilters();
@@ -1866,13 +1909,16 @@ function applyFilters() {
 }
 
 function clearFilters() {
-  state.filters = { radius:10, minRating:0, styles:[], brands:[] };
-  document.getElementById('radius-slider').value = 10;
-  document.getElementById('radius-val').textContent = '10mi';
+  state.filters = { distanceEnabled:false, radius:25, minRating:0, styles:[], brands:[] };
+  document.getElementById('distance-toggle').checked = false;
+  document.getElementById('radius-slider').value = 25;
+  updateDistanceToggle(false);
   document.querySelectorAll('.rchip').forEach((c,i) => c.classList.toggle('active', i===0));
   document.querySelectorAll('.style-cb, .brand-cb').forEach(c => c.checked = false);
   document.getElementById('filter-btn').classList.remove('active');
   closeFilters();
+  renderMapMarkers();
+  if (state.locatorView === 'list') renderList();
   showToast('Filters cleared', 'xmark');
 }
 
