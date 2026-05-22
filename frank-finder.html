@@ -94,6 +94,10 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 .map-bubble:hover{transform:scale(1.08);}
 .map-bubble .mn{font-size:11px;font-weight:800;color:var(--text);max-width:80px;overflow:hidden;text-overflow:ellipsis;}
 .map-bubble .mr{font-size:11px;font-weight:700;color:var(--star);}
+/* Compact pin (zoomed out) */
+.map-bubble.compact{border-radius:20px;padding:3px 7px;gap:3px;}
+.map-bubble.compact .me{font-size:13px;line-height:1;}
+.map-bubble.compact .mr{font-size:10px;}
 .map-pin-tri{
   width:0;height:0;border-left:6px solid transparent;border-right:6px solid transparent;
   border-top:8px solid var(--primary);margin:0 auto;
@@ -1714,7 +1718,7 @@ function initMap() {
 
   const map = L.map('map', {
     center: [state.userLocation.lat, state.userLocation.lng],
-    zoom: 11,
+    zoom: 12,
     zoomControl: false,   // we add it manually at bottomright to avoid the info bar
     attributionControl: false,
   });
@@ -1745,11 +1749,14 @@ function initMap() {
 
   renderMapMarkers();
 
+  // Re-render markers on zoom so compact/full pins update
+  map.on('zoomend', () => renderMapMarkers());
+
   // Try geolocation
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(pos => {
       state.userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      state.map.setView([state.userLocation.lat, state.userLocation.lng], 11);
+      state.map.setView([state.userLocation.lat, state.userLocation.lng], 12);
       state.userMarker.setLatLng([state.userLocation.lat, state.userLocation.lng]);
       document.getElementById('map-location-text').textContent = 'Near your location';
       renderMapMarkers();
@@ -1769,18 +1776,28 @@ function renderMapMarkers() {
   const filtered = getFilteredRestaurants();
   document.getElementById('map-count').textContent = filtered.length;
 
+  // Zoom <= 10 ≈ 35+ mile radius view → compact emoji pins to reduce clutter
+  const compact = state.map && state.map.getZoom() <= 10;
+
   filtered.forEach(r => {
+    const bubbleHTML = compact
+      ? `<div class="map-bubble compact">
+           <span class="me">🌭</span>
+           <span class="mr">★${r.rating}</span>
+         </div>`
+      : `<div class="map-bubble">
+           <span class="mn">${r.name}</span>
+           <span class="mr">★${r.rating}</span>
+         </div>`;
+
     const icon = L.divIcon({
       className: '',
       html: `<div class="map-marker-outer" id="mm-${r.id}">
-        <div class="map-bubble">
-          <span class="mn">${r.name}</span>
-          <span class="mr">★${r.rating}</span>
-        </div>
+        ${bubbleHTML}
         <div class="map-pin-tri"></div>
       </div>`,
-      iconSize: [140, 44],
-      iconAnchor: [70, 44],
+      iconSize: compact ? [58, 36] : [140, 44],
+      iconAnchor: compact ? [29, 36] : [70, 44],
       popupAnchor: [0, -44],
     });
 
