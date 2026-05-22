@@ -219,6 +219,14 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
   justify-content:center;border:none;color:#fff;font-size:16px;cursor:pointer;
   backdrop-filter:blur(8px);
 }
+.d-fav{
+  position:absolute;top:14px;right:14px;z-index:10;width:38px;height:38px;
+  border-radius:50%;background:rgba(44,24,16,0.65);display:flex;align-items:center;
+  justify-content:center;border:none;color:#fff;font-size:16px;cursor:pointer;
+  backdrop-filter:blur(8px);transition:background var(--tr),transform 0.15s;
+}
+.d-fav.active{background:rgba(183,28,42,0.85);}
+.d-fav:active{transform:scale(0.88);}
 .d-img-wrap{height:230px;flex-shrink:0;position:relative;overflow:hidden;background:var(--surface2);}
 .d-img-wrap img{width:100%;height:100%;object-fit:cover;}
 .d-img-placeholder{width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:90px;}
@@ -337,6 +345,37 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 /* ── PROFILE PAGE ── */
 #profile-page{overflow-y:auto;}
 .profile-content{padding-bottom:28px;}
+/* Profile tab bar */
+.prof-tab-bar{display:flex;gap:10px;padding:16px 16px 0;flex-shrink:0;}
+.prof-tab{
+  flex:1;padding:11px 8px;border:1px solid var(--border);background:var(--surface);
+  border-radius:var(--radius);font-family:'Nunito',sans-serif;font-size:13px;font-weight:800;
+  color:var(--subtext);cursor:pointer;transition:all var(--tr);display:flex;align-items:center;
+  justify-content:center;gap:6px;box-shadow:0 2px 6px rgba(44,24,16,0.07);
+}
+#prof-tab-reviews.active{background:var(--primary-dim);border-color:var(--primary);color:var(--primary);}
+#prof-tab-favorites.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent);}
+.prof-tab-pill{
+  font-size:10px;font-weight:900;padding:1px 6px;border-radius:20px;
+  background:var(--surface3);color:var(--subtext);transition:all var(--tr);
+}
+#prof-tab-reviews.active .prof-tab-pill{background:rgba(212,146,10,0.2);color:var(--primary);}
+#prof-tab-favorites.active .prof-tab-pill{background:rgba(183,28,42,0.2);color:var(--accent);}
+/* Favorites card on profile */
+.fav-card{
+  background:var(--surface);border-radius:var(--radius);overflow:hidden;
+  display:flex;cursor:pointer;border:1px solid var(--border);
+  transition:all var(--tr);flex-shrink:0;margin-bottom:8px;
+}
+.fav-card:active{border-color:var(--accent);transform:scale(0.99);}
+.fav-card-img{width:56px;min-height:56px;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;}
+.fav-card-body{padding:10px 12px;flex:1;min-width:0;}
+.fav-card-name{font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fav-card-meta{display:flex;align-items:center;gap:6px;margin-top:3px;}
+.fav-card-rating{font-size:12px;font-weight:700;color:var(--star);}
+.fav-card-dist{font-size:11px;color:var(--subtext);}
+.fav-card-rm{background:none;border:none;color:var(--subtext);font-size:14px;cursor:pointer;padding:8px;flex-shrink:0;transition:color var(--tr);}
+.fav-card-rm:hover{color:var(--accent);}
 .profile-hero{
   background:linear-gradient(160deg,var(--surface2) 0%,var(--surface) 100%);
   padding:24px 20px 20px;border-bottom:1px solid var(--border);
@@ -638,6 +677,16 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
   </div>
 
   <div class="fp-scroll">
+    <div class="fp-section" style="margin-bottom:14px;">
+      <div class="toggle-wrap" style="margin-bottom:0;">
+        <label class="toggle-switch">
+          <input type="checkbox" id="favorites-toggle">
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-label">❤️ Favorites Only</span>
+      </div>
+    </div>
+
     <div class="fp-section">
       <div class="toggle-wrap">
         <label class="toggle-switch">
@@ -695,6 +744,7 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 <!-- ── RESTAURANT DETAIL OVERLAY ── -->
 <div id="detail-overlay">
   <button class="d-back" onclick="closeDetail()"><i class="fa-solid fa-arrow-left"></i></button>
+  <button class="d-fav" id="d-fav-btn" onclick="toggleFavorite()"><i class="fa-regular fa-heart"></i></button>
   <div class="d-img-wrap" id="d-img-wrap">
     <div class="d-img-placeholder" id="d-img-placeholder"></div>
     <div class="d-img-dots" id="d-img-dots"></div>
@@ -1580,6 +1630,7 @@ const state = {
   page: 'locator',
   locatorView: 'map',
   specialsTab: 'daily',
+  profileTab: 'reviews',
   selectedRestaurantId: null,
   mapInited: false,
   map: null,
@@ -1592,12 +1643,14 @@ const state = {
     minRating: 0,
     styles: [],
     brands: [],
+    favoritesOnly: false,
   },
   reviewStarInput: 0,
   user: {
     nickname: 'FrankFan',
     photoUrl: null,
     reviews: [],
+    favorites: [],
     visitCount: 0,
   },
 };
@@ -1664,7 +1717,7 @@ function getLevelProgress(reviewCount) {
 }
 
 function getFilteredRestaurants() {
-  const { distanceEnabled, radius, minRating, styles, brands } = state.filters;
+  const { distanceEnabled, radius, minRating, styles, brands, favoritesOnly } = state.filters;
   const { lat, lng } = state.userLocation;
   return RESTAURANTS.filter(r => {
     const dist = haversine(lat, lng, r.lat, r.lng);
@@ -1672,6 +1725,7 @@ function getFilteredRestaurants() {
     if (r.rating < minRating) return false;
     if (styles.length > 0 && !styles.some(s => r.styles.includes(s))) return false;
     if (brands.length > 0 && !brands.some(b => r.brands.includes(b))) return false;
+    if (favoritesOnly && !state.user.favorites.includes(r.id)) return false;
     return true;
   }).map(r => ({ ...r, distance: haversine(lat, lng, r.lat, r.lng) }));
 }
@@ -1891,6 +1945,7 @@ function updateDistanceToggle(enabled) {
 }
 
 function applyFilters() {
+  state.filters.favoritesOnly = document.getElementById('favorites-toggle').checked;
   state.filters.distanceEnabled = document.getElementById('distance-toggle').checked;
   state.filters.radius = parseInt(document.getElementById('radius-slider').value);
   const activeChip = document.querySelector('.rchip.active');
@@ -1898,7 +1953,7 @@ function applyFilters() {
   state.filters.styles = [...document.querySelectorAll('.style-cb:checked')].map(c => c.value);
   state.filters.brands = [...document.querySelectorAll('.brand-cb:checked')].map(c => c.value);
 
-  const hasFilters = state.filters.minRating > 0 || state.filters.styles.length > 0 || state.filters.brands.length > 0 || state.filters.distanceEnabled;
+  const hasFilters = state.filters.minRating > 0 || state.filters.styles.length > 0 || state.filters.brands.length > 0 || state.filters.distanceEnabled || state.filters.favoritesOnly;
   document.getElementById('filter-btn').classList.toggle('active', hasFilters);
 
   closeFilters();
@@ -1908,7 +1963,8 @@ function applyFilters() {
 }
 
 function clearFilters() {
-  state.filters = { distanceEnabled:false, radius:25, minRating:0, styles:[], brands:[] };
+  state.filters = { distanceEnabled:false, radius:25, minRating:0, styles:[], brands:[], favoritesOnly:false };
+  document.getElementById('favorites-toggle').checked = false;
   document.getElementById('distance-toggle').checked = false;
   document.getElementById('radius-slider').value = 25;
   updateDistanceToggle(false);
@@ -2032,6 +2088,7 @@ function openDetail(id) {
   state.reviewStarInput = 0;
   scroll.scrollTop = 0;
   document.getElementById('detail-overlay').classList.add('open');
+  updateFavBtn();
 }
 
 function closeDetail() {
@@ -2156,6 +2213,61 @@ const GOOGLE_G_SVG = `<svg width="20" height="20" viewBox="0 0 48 48" xmlns="htt
   <path fill="none" d="M0 0h48v48H0z"/>
 </svg>`;
 
+// ═══════════════════════════════════════════
+//  FAVORITES
+// ═══════════════════════════════════════════
+
+function loadFavorites() {
+  try {
+    const saved = localStorage.getItem('ff_favorites');
+    if (saved) state.user.favorites = JSON.parse(saved);
+  } catch(e) {}
+}
+
+function saveFavorites() {
+  try {
+    localStorage.setItem('ff_favorites', JSON.stringify(state.user.favorites));
+  } catch(e) {}
+}
+
+function toggleFavorite() {
+  const id = state.selectedRestaurantId;
+  if (!id) return;
+  const idx = state.user.favorites.indexOf(id);
+  if (idx === -1) {
+    state.user.favorites.push(id);
+    showToast('Added to favorites', 'heart');
+  } else {
+    state.user.favorites.splice(idx, 1);
+    showToast('Removed from favorites', 'heart-crack');
+  }
+  saveFavorites();
+  updateFavBtn();
+  if (state.filters.favoritesOnly) {
+    renderMapMarkers();
+    if (state.locatorView === 'list') renderList();
+  }
+  if (state.page === 'profile') renderProfile();
+}
+
+function updateFavBtn() {
+  const btn = document.getElementById('d-fav-btn');
+  if (!btn) return;
+  const isFav = state.user.favorites.includes(state.selectedRestaurantId);
+  btn.classList.toggle('active', isFav);
+  btn.innerHTML = isFav
+    ? '<i class="fa-solid fa-heart"></i>'
+    : '<i class="fa-regular fa-heart"></i>';
+}
+
+function setProfileTab(tab) {
+  state.profileTab = tab;
+  document.getElementById('prof-tab-reviews').classList.toggle('active', tab === 'reviews');
+  document.getElementById('prof-tab-favorites').classList.toggle('active', tab === 'favorites');
+  document.getElementById('prof-panel-reviews').style.display = tab === 'reviews' ? '' : 'none';
+  document.getElementById('prof-panel-favorites').style.display = tab === 'favorites' ? '' : 'none';
+}
+
 function renderProfile() {
   // Show/hide sign-out button based on auth state
   const signoutBtn = document.getElementById('signout-btn');
@@ -2247,8 +2359,8 @@ function renderProfile() {
           <div class="ps-label">Reviews</div>
         </div>
         <div class="ph-stat">
-          <div class="ps-val">${visitCount}</div>
-          <div class="ps-label">Visits</div>
+          <div class="ps-val">${state.user.favorites.length}</div>
+          <div class="ps-label">Favorites</div>
         </div>
         <div class="ph-stat">
           <div class="ps-val">${reviews.length > 0 ? (reviews.reduce((a,r)=>a+r.rating,0)/reviews.length).toFixed(1) : '—'}</div>
@@ -2268,16 +2380,55 @@ function renderProfile() {
         </div>
         <div class="lpc-desc">${nextLevel ? `${progress.needed - progress.current} more review${progress.needed - progress.current !== 1 ? 's' : ''} to reach ${nextLevel.name}` : 'You\'ve reached the pinnacle of frankfurter fandom!'}</div>
       </div>
+    </div>
 
-      <div class="ac-section">
-        <div class="ac-section-title">My Reviews (${reviews.length})</div>
+    <div class="prof-tab-bar">
+      <button class="prof-tab ${state.profileTab === 'reviews' ? 'active' : ''}" id="prof-tab-reviews" onclick="setProfileTab('reviews')">
+        ✍️ Reviews <span class="prof-tab-pill">${reviews.length}</span>
+      </button>
+      <button class="prof-tab ${state.profileTab === 'favorites' ? 'active' : ''}" id="prof-tab-favorites" onclick="setProfileTab('favorites')">
+        ❤️ Favorites <span class="prof-tab-pill">${state.user.favorites.length}</span>
+      </button>
+    </div>
+
+    <div class="ac-body">
+      <div id="prof-panel-reviews" style="display:${state.profileTab === 'reviews' ? '' : 'none'};">
         ${reviews.length === 0
           ? `<div class="empty-revs"><i class="fa-solid fa-comment-slash"></i><p>No reviews yet. Find a dog and share your thoughts!</p></div>`
           : myReviews
         }
       </div>
+      <div id="prof-panel-favorites" style="display:${state.profileTab === 'favorites' ? '' : 'none'};">
+        ${state.user.favorites.length === 0
+          ? `<div class="empty-revs"><i class="fa-regular fa-heart"></i><p>No favorites yet. Tap the heart on any restaurant to save it here.</p></div>`
+          : state.user.favorites.map(fid => {
+              const fr = RESTAURANTS.find(x => x.id === fid);
+              if (!fr) return '';
+              const dist = haversine(state.userLocation.lat, state.userLocation.lng, fr.lat, fr.lng);
+              return `<div class="fav-card" onclick="openDetail(${fr.id})">
+                <div class="fav-card-img" style="background:${fr.bg};">${fr.emoji}</div>
+                <div class="fav-card-body">
+                  <div class="fav-card-name">${fr.name}</div>
+                  <div class="fav-card-meta">
+                    <span class="fav-card-rating">★ ${fr.rating.toFixed(1)}</span>
+                    <span class="fav-card-dist">${dist.toFixed(1)} mi</span>
+                  </div>
+                </div>
+                <button class="fav-card-rm" onclick="event.stopPropagation();removeFavorite(${fr.id})" title="Remove"><i class="fa-solid fa-xmark"></i></button>
+              </div>`;
+            }).join('')
+        }
+      </div>
     </div>
   `;
+}
+
+function removeFavorite(id) {
+  state.user.favorites = state.user.favorites.filter(f => f !== id);
+  saveFavorites();
+  if (state.filters.favoritesOnly) { renderMapMarkers(); if (state.locatorView === 'list') renderList(); }
+  renderProfile();
+  showToast('Removed from favorites', 'heart-crack');
 }
 
 // ── Nickname Modal ──
@@ -2455,6 +2606,9 @@ geocodeRestaurants();
 // ═══════════════════════════════════════════
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Load saved favorites from localStorage
+  loadFavorites();
+
   // Radius slider live update
   document.getElementById('radius-slider').addEventListener('input', function() {
     document.getElementById('radius-val').textContent = this.value + 'mi';
@@ -2487,7 +2641,8 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         currentUser = null;
         userProfile = null;
-        state.user = { nickname:'FrankFan', photoUrl:null, reviews:[], visitCount:0 };
+        state.user = { nickname:'FrankFan', photoUrl:null, reviews:[], favorites:[], visitCount:0 };
+        loadFavorites(); // restore from localStorage after sign-out
       }
       // Re-render profile page if it's currently visible
       if (state.page === 'profile') renderProfile();
