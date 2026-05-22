@@ -124,6 +124,7 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 .sort-bar{
   display:flex;align-items:center;gap:8px;padding:10px 12px 6px;
   border-bottom:1px solid var(--border);flex-shrink:0;
+  position:sticky;top:0;z-index:10;background:var(--surface);
 }
 .sort-label{font-size:11px;color:var(--subtext);font-weight:800;text-transform:uppercase;letter-spacing:0.5px;}
 .sort-select{
@@ -302,7 +303,8 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 /* ── SPECIALS PAGE ── */
 #specials-page{overflow:hidden;}
 .specials-tab-bar{
-  display:flex;gap:10px;padding:12px 12px 0;flex-shrink:0;background:transparent;
+  display:flex;gap:10px;padding:12px 12px 12px;flex-shrink:0;background:var(--surface);
+  border-bottom:1px solid var(--border);
 }
 .spec-tab{
   flex:1;padding:13px 8px;border:1px solid var(--border);background:var(--surface);
