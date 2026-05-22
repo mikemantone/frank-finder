@@ -155,7 +155,7 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
   font-size:10px;font-weight:800;color:var(--text);
   align-self:flex-start;margin-top:5px;
 }
-.card-tags{display:flex;flex-direction:column;gap:4px;margin-top:4px;}
+.card-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:4px;align-items:flex-start;}
 .ctag-group{display:flex;flex-wrap:wrap;gap:4px;}
 .ctag{font-size:10px;font-weight:800;background:var(--primary-dim);color:var(--primary);border:1px solid rgba(240,165,0,0.3);border-radius:20px;padding:2px 8px;}
 .ctag-brand{background:var(--accent-dim);color:var(--accent);border-color:rgba(183,28,42,0.3);}
@@ -242,6 +242,7 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 .d-rating-row:hover{opacity:0.75;}
 .d-stars{color:var(--star);font-size:16px;font-weight:900;}
 .d-rcount{color:var(--subtext);font-size:13px;text-decoration:underline;text-underline-offset:2px;}
+.d-badge-row{display:flex;flex-wrap:wrap;gap:6px;align-items:flex-start;}
 .d-badges{display:flex;gap:6px;flex-wrap:wrap;}
 .dbadge{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;border:1px solid;}
 .dbadge-style{background:var(--primary-dim);border-color:rgba(240,165,0,0.3);color:var(--primary);}
@@ -2190,11 +2191,9 @@ function openDetail(id) {
       <div class="d-stars">★ ${r.rating.toFixed(1)}</div>
       <div class="d-rcount">${(r.reviewCount + userRevs.length).toLocaleString()} reviews</div>
     </div>
-    <div class="d-badges">
-      ${r.brands.map(b => `<span class="dbadge dbadge-brand">${b}</span>`).join('')}
-    </div>
-    <div class="d-badges" style="margin-top:6px;">
-      ${r.styles.map(s => `<span class="dbadge dbadge-style">${s}</span>`).join('')}
+    <div class="d-badge-row">
+      <div class="d-badges">${r.brands.map(b => `<span class="dbadge dbadge-brand">${b}</span>`).join('')}</div>
+      <div class="d-badges">${r.styles.map(s => `<span class="dbadge dbadge-style">${s}</span>`).join('')}</div>
     </div>
 
     ${r.address ? `
