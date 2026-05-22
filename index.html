@@ -152,8 +152,7 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 .card-rcount{font-size:11px;color:var(--subtext);}
 .card-dist{font-size:11px;font-weight:800;color:var(--green);background:var(--green-dim);border:1px solid rgba(46,125,50,0.3);border-radius:6px;padding:2px 7px;white-space:nowrap;flex-shrink:0;}
 .card-specialty{
-  background:var(--primary-dim);border:1px solid rgba(240,165,0,0.25);color:var(--primary);
-  font-size:10px;font-weight:800;border-radius:6px;padding:2px 7px;
+  font-size:10px;font-weight:800;color:var(--text);
   align-self:flex-start;margin-top:5px;
 }
 .card-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;}
@@ -2075,8 +2074,8 @@ function renderList() {
         </div>
         <div class="card-specialty">🏆 ${r.topSpecialty}</div>
         <div class="card-tags">
-          ${r.styles.slice(0,2).map(s => `<span class="ctag">${s}</span>`).join('')}
           ${r.brands.slice(0,1).map(b => `<span class="ctag ctag-brand">${b}</span>`).join('')}
+          ${r.styles.slice(0,2).map(s => `<span class="ctag">${s}</span>`).join('')}
         </div>
       </div>
     </div>
@@ -2186,12 +2185,10 @@ function openDetail(id) {
     <div class="d-rating-row" onclick="document.getElementById('reviews-section').scrollIntoView({behavior:'smooth'})">
       <div class="d-stars">★ ${r.rating.toFixed(1)}</div>
       <div class="d-rcount">${(r.reviewCount + userRevs.length).toLocaleString()} reviews</div>
-      <div class="d-badges">
-        ${r.styles.map(s => `<span class="dbadge dbadge-style">${s}</span>`).join('')}
-      </div>
     </div>
     <div class="d-badges">
       ${r.brands.map(b => `<span class="dbadge dbadge-brand">${b}</span>`).join('')}
+      ${r.styles.map(s => `<span class="dbadge dbadge-style">${s}</span>`).join('')}
     </div>
 
     ${r.address ? `
