@@ -1798,7 +1798,7 @@ function initMap() {
     iconSize: [40, 40],
     iconAnchor: [20, 20],
   });
-  state.userMarker = L.marker([state.userLocation.lat, state.userLocation.lng], { icon: userIcon })
+  state.userMarker = L.marker([state.userLocation.lat, state.userLocation.lng], { icon: userIcon, zIndexOffset: 1000 })
     .addTo(map)
     .bindPopup('<b>You are here</b>');
 
