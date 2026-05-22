@@ -560,6 +560,18 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 /* Utility */
 .flex-center{display:flex;align-items:center;justify-content:center;}
 .hidden{display:none!important;}
+
+/* ── DESKTOP MAX WIDTH ── */
+@media (min-width: 801px) {
+  /* List view: sort bar + cards centered */
+  #list-view{max-width:800px;width:100%;margin:0 auto;}
+  /* Detail overlay: content below hero centered */
+  .d-scroll{max-width:800px;width:100%;margin:0 auto;}
+  /* Specials: tab bar + cards centered */
+  .specials-tab-bar,.specials-content{max-width:800px;width:100%;margin:0 auto;}
+  /* Profile: all profile content centered */
+  .profile-content{max-width:800px;width:100%;margin:0 auto;}
+}
 </style>
 </head>
 <body>
