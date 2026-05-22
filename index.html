@@ -155,7 +155,8 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
   font-size:10px;font-weight:800;color:var(--text);
   align-self:flex-start;margin-top:5px;
 }
-.card-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:4px;}
+.card-tags{display:flex;flex-direction:column;gap:4px;margin-top:4px;}
+.ctag-group{display:flex;flex-wrap:wrap;gap:4px;}
 .ctag{font-size:10px;font-weight:800;background:var(--primary-dim);color:var(--primary);border:1px solid rgba(240,165,0,0.3);border-radius:20px;padding:2px 8px;}
 .ctag-brand{background:var(--accent-dim);color:var(--accent);border-color:rgba(183,28,42,0.3);}
 
@@ -2074,8 +2075,8 @@ function renderList() {
         </div>
         <div class="card-specialty">🏆 ${r.topSpecialty}</div>
         <div class="card-tags">
-          ${r.brands.map(b => `<span class="ctag ctag-brand">${b}</span>`).join('')}
-          ${r.styles.map(s => `<span class="ctag">${s}</span>`).join('')}
+          <div class="ctag-group">${r.brands.map(b => `<span class="ctag ctag-brand">${b}</span>`).join('')}</div>
+          <div class="ctag-group">${r.styles.map(s => `<span class="ctag">${s}</span>`).join('')}</div>
         </div>
       </div>
     </div>
@@ -2188,6 +2189,8 @@ function openDetail(id) {
     </div>
     <div class="d-badges">
       ${r.brands.map(b => `<span class="dbadge dbadge-brand">${b}</span>`).join('')}
+    </div>
+    <div class="d-badges" style="margin-top:6px;">
       ${r.styles.map(s => `<span class="dbadge dbadge-style">${s}</span>`).join('')}
     </div>
 
