@@ -1733,6 +1733,7 @@ function getFilteredRestaurants() {
 
 function navTo(page) {
   state.page = page;
+  closeFilters();
   ['locator','specials','profile'].forEach(p => {
     document.getElementById(`${p}-page`).classList.toggle('active', p === page);
     document.getElementById(`nav-${p}`).classList.toggle('active', p === page);
