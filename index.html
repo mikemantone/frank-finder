@@ -1714,7 +1714,7 @@ function initMap() {
 
   const map = L.map('map', {
     center: [state.userLocation.lat, state.userLocation.lng],
-    zoom: 13,
+    zoom: 11,
     zoomControl: false,
     attributionControl: false,
   });
@@ -1749,7 +1749,7 @@ function initMap() {
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(pos => {
       state.userLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-      state.map.setView([state.userLocation.lat, state.userLocation.lng], 13);
+      state.map.setView([state.userLocation.lat, state.userLocation.lng], 11);
       state.userMarker.setLatLng([state.userLocation.lat, state.userLocation.lng]);
       document.getElementById('map-location-text').textContent = 'Near your location';
       renderMapMarkers();
@@ -1791,10 +1791,7 @@ function renderMapMarkers() {
     state.markers.push(marker);
   });
 
-  if (state.map && filtered.length > 0) {
-    const group = L.featureGroup(state.markers);
-    state.map.fitBounds(group.getBounds().pad(0.15), { maxZoom: 14 });
-  }
+  // No auto-fitBounds — map stays at user's chosen zoom level
 }
 
 // ═══════════════════════════════════════════
