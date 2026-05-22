@@ -178,6 +178,7 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 .radius-row{display:flex;align-items:center;gap:10px;}
 .radius-slider{flex:1;accent-color:var(--primary);cursor:pointer;height:4px;}
 .radius-slider:disabled{opacity:0.35;cursor:default;}
+.fav-filter-wrap.disabled{opacity:0.4;pointer-events:none;}
 .radius-val{font-size:14px;font-weight:900;color:var(--primary);min-width:40px;text-align:right;}
 .radius-val.disabled{color:var(--subtext);}
 /* Toggle switch */
@@ -687,7 +688,7 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 
   <div class="fp-scroll">
     <div class="fp-section" style="margin-bottom:14px;">
-      <div class="toggle-wrap" style="margin-bottom:0;">
+      <div class="toggle-wrap fav-filter-wrap" id="fav-filter-wrap" style="margin-bottom:0;">
         <label class="toggle-switch">
           <input type="checkbox" id="favorites-toggle">
           <span class="toggle-slider"></span>
@@ -1914,6 +1915,7 @@ function renderList() {
 function openFilters() {
   document.getElementById('filter-overlay').classList.add('open');
   document.getElementById('filter-panel').classList.add('open');
+  document.getElementById('fav-filter-wrap').classList.toggle('disabled', !currentUser);
 }
 
 function closeFilters() {
