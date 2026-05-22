@@ -145,11 +145,12 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
   justify-content:center;font-size:42px;
 }
 .card-body{flex:1;padding:12px 12px 12px 12px;display:flex;flex-direction:column;justify-content:space-between;min-width:0;}
-.card-name{font-size:14px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.card-name-row{display:flex;align-items:center;gap:8px;}
+.card-name{font-size:14px;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;min-width:0;}
 .card-meta{display:flex;align-items:center;gap:6px;margin-top:3px;}
 .card-rating{display:flex;align-items:center;gap:3px;font-size:13px;font-weight:700;color:var(--star);}
 .card-rcount{font-size:11px;color:var(--subtext);}
-.card-dist{font-size:11px;color:var(--subtext);margin-left:auto;}
+.card-dist{font-size:11px;font-weight:800;color:var(--green);background:var(--green-dim);border:1px solid rgba(46,125,50,0.3);border-radius:6px;padding:2px 7px;white-space:nowrap;flex-shrink:0;}
 .card-specialty{
   background:var(--primary-dim);border:1px solid rgba(240,165,0,0.25);color:var(--primary);
   font-size:10px;font-weight:800;border-radius:6px;padding:2px 7px;
@@ -243,7 +244,7 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 .d-badges{display:flex;gap:6px;flex-wrap:wrap;}
 .dbadge{font-size:10px;font-weight:800;padding:3px 9px;border-radius:20px;border:1px solid;}
 .dbadge-style{background:var(--primary-dim);border-color:rgba(240,165,0,0.3);color:var(--primary);}
-.dbadge-brand{background:rgba(100,180,255,0.1);border-color:rgba(100,180,255,0.3);color:var(--blue);}
+.dbadge-brand{background:var(--accent-dim);border-color:rgba(183,28,42,0.3);color:var(--accent);}
 .d-section{margin-top:22px;}
 .d-section-title{font-size:16px;font-weight:900;margin-bottom:12px;display:flex;align-items:center;gap:8px;}
 .d-section-title i{color:var(--primary);}
@@ -251,15 +252,15 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 .d-divider{height:1px;background:var(--border);margin:22px 0;}
 .d-address{
   display:flex;align-items:center;gap:8px;margin-top:16px;margin-bottom:4px;
-  font-size:13px;font-weight:700;color:var(--blue);text-decoration:none;
-  background:rgba(21,101,192,0.07);border:1px solid rgba(21,101,192,0.18);
+  font-size:13px;font-weight:700;color:var(--green);text-decoration:none;
+  background:var(--green-dim);border:1px solid rgba(46,125,50,0.3);
   border-radius:10px;padding:9px 13px;
   transition:background 0.2s;
 }
-.d-address:hover{background:rgba(21,101,192,0.13);}
-.d-address i{font-size:14px;color:var(--blue);flex-shrink:0;}
+.d-address:hover{background:rgba(46,125,50,0.22);}
+.d-address i{font-size:14px;color:var(--green);flex-shrink:0;}
 .d-address-text{flex:1;min-width:0;}
-.d-address-dist{font-size:12px;font-weight:800;color:var(--blue);opacity:0.7;white-space:nowrap;flex-shrink:0;margin-left:4px;}
+.d-address-dist{font-size:12px;font-weight:800;color:var(--green);white-space:nowrap;flex-shrink:0;margin-left:4px;}
 
 /* Menu items */
 .menu-item{background:var(--surface);border-radius:12px;padding:14px;margin-bottom:8px;border:1px solid var(--border);}
@@ -2063,11 +2064,13 @@ function renderList() {
     <div class="restaurant-card" onclick="openDetail(${r.id})">
       <div class="card-img" style="background:${r.bg};">${r.emoji}</div>
       <div class="card-body">
-        <div class="card-name">${r.name}</div>
+        <div class="card-name-row">
+          <div class="card-name">${r.name}</div>
+          <div class="card-dist">${r.distance.toFixed(1)} mi</div>
+        </div>
         <div class="card-meta">
           <div class="card-rating">★ ${r.rating.toFixed(1)}</div>
           <div class="card-rcount">(${r.reviewCount.toLocaleString()})</div>
-          <div class="card-dist">${r.distance.toFixed(1)} mi</div>
         </div>
         <div class="card-specialty">🏆 ${r.topSpecialty}</div>
         <div class="card-tags">
