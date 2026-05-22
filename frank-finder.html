@@ -481,7 +481,9 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 .leaflet-control-zoom a{
   background:var(--surface)!important;color:var(--text)!important;
   border:1px solid var(--border)!important;
-  width:36px!important;line-height:36px!important;font-size:18px!important;
+  width:36px!important;height:36px!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  line-height:1!important;font-size:18px!important;
 }
 .leaflet-control-zoom-in{border-radius:20px 20px 0 0!important;border-bottom:none!important;}
 .leaflet-control-zoom-out{border-radius:0 0 20px 20px!important;}
@@ -489,8 +491,9 @@ html,body{height:100%;overflow:hidden;font-family:'Nunito',sans-serif;background
 /* Controls must sit above Leaflet's map pane (z-index:400) but below our overlays (filter:500, detail:600) */
 .leaflet-control-container{z-index:450!important;}
 .leaflet-top,.leaflet-bottom{z-index:450!important;}
-/* Push bottomright zoom above the nav bar */
+/* Equal gap from nav bar and right edge */
 .leaflet-bottom.leaflet-right{bottom:calc(var(--nav-height) + 12px)!important;}
+.leaflet-right .leaflet-control{margin-right:12px!important;}
 .leaflet-control-attribution{
   font-size:9px!important;opacity:0.5;background:rgba(255,255,255,0.6)!important;
   border-radius:4px 0 0 4px!important;padding:2px 5px!important;
