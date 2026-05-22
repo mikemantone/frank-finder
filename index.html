@@ -2695,6 +2695,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       // Re-render profile page if it's currently visible
       if (state.page === 'profile') renderProfile();
+      // Re-render open restaurant detail so the review form replaces the sign-in prompt
+      if (state.selectedRestaurantId) openDetail(state.selectedRestaurantId);
       authReady = true;
       maybeReveal();
     });
